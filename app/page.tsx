@@ -2,7 +2,7 @@ import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
-import { ProductGrid } from "@/components/product-grid"
+import { ProductGridCustom } from "@/components/product-grid-custom"
 import { CollectionsCarousel } from "@/components/collections-carousel"
 
 export default function Home() {
@@ -48,7 +48,7 @@ export default function Home() {
         <CollectionsCarousel />
       </section>
 
-      {/* Featured Products */}
+      {/* New Arrivals */}
       <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
         <div className="flex items-center justify-between mb-8 sm:mb-12">
           <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold">New Arrivals</h2>
@@ -56,7 +56,76 @@ export default function Home() {
             <Link href="/shop">View All</Link>
           </Button>
         </div>
-        <ProductGrid />
+        <ProductGridCustom products={[
+          {
+            id: "1",
+            name: "Classic Taupe Double-Breasted Suit",
+            price: 1289,
+            image: "/thudarum-taupe-suit-hero.jpg",
+            category: "Suits",
+          },
+          {
+            id: "2",
+            name: "Heritage Green Check Blazer",
+            price: 895,
+            image: "/thudarum-green-check-blazer.jpg",
+            category: "Blazers",
+          },
+          {
+            id: "3",
+            name: "Luxe Burgundy Evening Suit",
+            price: 1545,
+            image: "/thudarum-burgundy-evening-suit.jpg",
+            category: "Suits",
+          },
+          {
+            id: "4",
+            name: "Sky Blue Textured Blazer",
+            price: 795,
+            image: "/thudarum-sky-blue-blazer.jpg",
+            category: "Blazers",
+          },
+        ]} />
+      </section>
+
+      {/* Best Sellers */}
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
+        <div className="flex items-center justify-between mb-8 sm:mb-12">
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold">Best Sellers</h2>
+          <Button variant="ghost" asChild className="text-sm sm:text-base">
+            <Link href="/shop">View All</Link>
+          </Button>
+        </div>
+        <ProductGridCustom products={[
+          {
+            id: "5",
+            name: "Burgundy Blazer with Cream Trousers",
+            price: 985,
+            image: "/thudarum-burgundy-blazer-combo.jpg",
+            category: "Separates",
+          },
+          {
+            id: "6",
+            name: "Navy Velvet Double-Breasted Jacket",
+            price: 1195,
+            image: "/thudarum-navy-velvet-blazer.jpg",
+            category: "Blazers",
+          },
+          {
+            id: "7",
+            name: "Refined Gray Double-Breasted Suit",
+            price: 1345,
+            image: "/thudarum-gray-suit-refined.jpg",
+            category: "Suits",
+          },
+          {
+            id: "8",
+            name: "Modern Slate Blazer Set",
+            price: 1095,
+            image: "/thudarum-slate-blazer-set.jpg",
+            category: "Separates",
+          },
+        ]} />
       </section>
 
       {/* About Section - Our Story */}
