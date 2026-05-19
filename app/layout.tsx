@@ -17,23 +17,23 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Thudarum - Modern Fashion",
   description: "Minimalist contemporary fashion for the discerning individual",
-  generator: "v0.app",
+  generator: "saprrow",
   icons: {
     icon: [
       {
-        url: "/icon-light-32x32.png",
+        url: "",
         media: "(prefers-color-scheme: light)",
       },
       {
-        url: "/icon-dark-32x32.png",
+        url: "",
         media: "(prefers-color-scheme: dark)",
       },
       {
-        url: "/icon.svg",
+        url: "",
         type: "image/svg+xml",
       },
     ],
-    apple: "/apple-icon.png",
+    apple: "",
   },
 }
 
