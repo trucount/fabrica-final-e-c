@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { EditSaveButton } from "@/components/edit-save-button"
 import { EditStatusMessage } from "./status-message"
+import { SyncedFooterLink } from "./synced-footer-link"
 import { getAboutContent } from "@/lib/about-content"
 import { getHomeContent } from "@/lib/home-content"
 import { getSiteContent } from "@/lib/site-content"
@@ -267,10 +268,10 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
                     <Link href="/edit/collections">Collections</Link>
                   </li>
                   <li>
-                    <Link href="/edit#new-arrivals">{homeContent.newArrivalsTitle}</Link>
+                    <SyncedFooterLink href="/edit#new-arrivals" inputName="newArrivalsTitle" fallback={homeContent.newArrivalsTitle} />
                   </li>
                   <li>
-                    <Link href="/edit#best-sellers">{homeContent.bestSellersTitle}</Link>
+                    <SyncedFooterLink href="/edit#best-sellers" inputName="bestSellersTitle" fallback={homeContent.bestSellersTitle} />
                   </li>
                 </ul>
               </div>
