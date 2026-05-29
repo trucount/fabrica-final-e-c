@@ -5,15 +5,11 @@ import { ProductGridCustom } from "@/components/product-grid-custom"
 import { CollectionsCarousel } from "@/components/collections-carousel"
 import { AboutSections } from "@/components/about-sections"
 import { getAboutContent } from "@/lib/about-content"
-import { getCollectionsContent } from "@/lib/collections-content"
 import { getHomeContent } from "@/lib/home-content"
+import { COLLECTIONS } from "@/lib/collections-data"
 
 export default async function Home() {
-  const [aboutContent, collectionsContent, homeContent] = await Promise.all([
-    getAboutContent(),
-    getCollectionsContent(),
-    getHomeContent(),
-  ])
+  const [aboutContent, homeContent] = await Promise.all([getAboutContent(), getHomeContent()])
 
   return (
     <div className="min-h-screen">
@@ -54,7 +50,7 @@ export default async function Home() {
             <Link href="/collections">View All</Link>
           </Button>
         </div>
-        <CollectionsCarousel collections={collectionsContent.collections} />
+        <CollectionsCarousel collections={COLLECTIONS} />
       </section>
 
       {/* New Arrivals */}

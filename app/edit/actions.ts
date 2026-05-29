@@ -67,13 +67,6 @@ export async function saveEditedCollectionsContent(formData: FormData) {
   const content: CollectionsContent = {
     title: getRequiredText(formData, "title"),
     description: getRequiredText(formData, "description"),
-    collections: formData.getAll("collectionIds").map((id, index) => ({
-      id: toText(id),
-      name: getRequiredText(formData, `collections.${index}.name`),
-      description: getRequiredText(formData, `collections.${index}.description`),
-      image: getRequiredText(formData, `collections.${index}.image`),
-      items: getRequiredText(formData, `collections.${index}.items`),
-    })),
     featuredTitle: getRequiredText(formData, "featuredTitle"),
     featuredDescription: getRequiredText(formData, "featuredDescription"),
   }

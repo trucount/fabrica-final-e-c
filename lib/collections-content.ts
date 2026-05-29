@@ -1,15 +1,6 @@
-export type CollectionContentItem = {
-  id: string
-  name: string
-  description: string
-  image: string
-  items: string
-}
-
 export type CollectionsContent = {
   title: string
   description: string
-  collections: CollectionContentItem[]
   featuredTitle: string
   featuredDescription: string
 }
@@ -86,38 +77,11 @@ function parseCollectionsContent(content: unknown): CollectionsContent {
   const parsedContent = {
     title: getString(content, "title"),
     description: getString(content, "description"),
-    collections: getCollections(content, "collections"),
     featuredTitle: getString(content, "featuredTitle"),
     featuredDescription: getString(content, "featuredDescription"),
   }
 
-  if (!parsedContent.collections.length) {
-    throw new Error("Supabase collections content must include at least one collection.")
-  }
-
   return parsedContent
-}
-
-function getCollections(content: Record<string, unknown>, key: string) {
-  const value = content[key]
-
-  if (!Array.isArray(value)) {
-    throw new Error(`Supabase collections content field "${key}" must be an array.`)
-  }
-
-  return value.map((item, index) => {
-    if (!isRecord(item)) {
-      throw new Error(`Supabase collection item ${index + 1} is invalid.`)
-    }
-
-    return {
-      id: getString(item, "id"),
-      name: getString(item, "name"),
-      description: getString(item, "description"),
-      image: getString(item, "image"),
-      items: getString(item, "items"),
-    }
-  })
 }
 
 function getString(content: Record<string, unknown>, key: string) {

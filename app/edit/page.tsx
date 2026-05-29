@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { getAboutContent } from "@/lib/about-content"
-import { getCollectionsContent } from "@/lib/collections-content"
 import { getHomeContent } from "@/lib/home-content"
+import { COLLECTIONS } from "@/lib/collections-data"
 import { EDIT_SESSION_COOKIE } from "./constants"
 import { loginToHomeEdit, logoutFromEdit, saveEditedHomeContent } from "./actions"
 
@@ -27,11 +27,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
     return <EditLoginPage error={params.error === "1" || params.error === "auth"} />
   }
 
-  const [aboutContent, collectionsContent, homeContent] = await Promise.all([
-    getAboutContent(),
-    getCollectionsContent(),
-    getHomeContent(),
-  ])
+  const [aboutContent, homeContent] = await Promise.all([getAboutContent(), getHomeContent()])
   const saved = params.saved === "1"
 
   return (
@@ -109,7 +105,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
               <Link href="/collections">View All</Link>
             </Button>
           </div>
-          <CollectionsCarousel collections={collectionsContent.collections} />
+          <CollectionsCarousel collections={COLLECTIONS} />
         </section>
 
         <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">

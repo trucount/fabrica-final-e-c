@@ -6,6 +6,7 @@ import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { COLLECTIONS } from "@/lib/collections-data"
 import { getCollectionsContent } from "@/lib/collections-content"
 import { loginToCollectionsEdit, logoutFromEdit, saveEditedCollectionsContent } from "../actions"
 import { EDIT_SESSION_COOKIE } from "../constants"
@@ -81,10 +82,8 @@ export default async function EditCollectionsPage({ searchParams }: EditCollecti
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
-            {content.collections.map((collection, index) => (
+            {COLLECTIONS.map((collection) => (
               <div key={collection.id} className="group">
-                <input type="hidden" name="collectionIds" value={collection.id} />
-                <input type="hidden" name={`collections.${index}.image`} value={collection.image} />
                 <div className="relative aspect-[4/5] overflow-hidden bg-secondary mb-4">
                   <Image
                     src={collection.image}
@@ -93,25 +92,12 @@ export default async function EditCollectionsPage({ searchParams }: EditCollecti
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100 transition-opacity duration-500" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 translate-y-0 transition-transform duration-500 space-y-3">
-                    <Input
-                      name={`collections.${index}.items`}
-                      defaultValue={collection.items}
-                      aria-label={`${collection.name} item count`}
-                      className="h-auto border-dashed bg-background/75 text-xs sm:text-sm text-muted-foreground"
-                    />
-                    <Input
-                      name={`collections.${index}.name`}
-                      defaultValue={collection.name}
-                      aria-label={`${collection.name} name`}
-                      className="h-auto border-dashed bg-background/75 font-serif text-2xl sm:text-3xl md:text-4xl font-semibold"
-                    />
-                    <Textarea
-                      name={`collections.${index}.description`}
-                      defaultValue={collection.description}
-                      aria-label={`${collection.name} description`}
-                      className="min-h-28 resize-y border-dashed bg-background/75 text-sm sm:text-base text-muted-foreground"
-                    />
+                  <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 translate-y-0 transition-transform duration-500">
+                    <p className="text-white/80 text-xs sm:text-sm mb-2">{collection.items}</p>
+                    <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold text-white mb-2">
+                      {collection.name}
+                    </h2>
+                    <p className="text-white/90 text-sm sm:text-base">{collection.description}</p>
                   </div>
                 </div>
                 <Button variant="ghost" className="w-full justify-between text-sm sm:text-base group-hover:bg-secondary">

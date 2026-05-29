@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { getCollectionsContent } from "@/lib/collections-content"
+import { COLLECTIONS } from "@/lib/collections-data"
 
 export default async function CollectionsPage() {
   const content = await getCollectionsContent()
@@ -30,7 +31,7 @@ export default async function CollectionsPage() {
 
         {/* Collections Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
-          {content.collections.map((collection) => (
+          {COLLECTIONS.map((collection) => (
             <Link key={collection.id} href={`/shop?collection=${collection.id}`} className="group">
               <div className="relative aspect-[4/5] overflow-hidden bg-secondary mb-4">
                 <Image

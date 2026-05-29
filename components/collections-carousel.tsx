@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import type { CollectionContentItem } from "@/lib/collections-content"
+import type { CollectionItem } from "@/lib/collections-data"
 import {
   Carousel,
   CarouselContent,
@@ -12,7 +12,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 
-export function CollectionsCarousel({ collections }: { collections: CollectionContentItem[] }) {
+export function CollectionsCarousel({ collections }: { collections: CollectionItem[] }) {
   return (
     <Carousel className="w-full">
       <CarouselContent className="-ml-2 md:-ml-4">
