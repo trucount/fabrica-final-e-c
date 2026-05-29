@@ -1,4 +1,3 @@
-import { cookies } from "next/headers"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, LogOut } from "lucide-react"
@@ -7,25 +6,23 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { EditSaveButton } from "@/components/edit-save-button"
-import { COLLECTIONS } from "@/lib/collections-data"
+import { getCollections } from "@/lib/collections-data"
 import { getCollectionsContent } from "@/lib/collections-content"
 import { loginToCollectionsEdit, logoutFromEdit, saveEditedCollectionsContent } from "../actions"
-import { EDIT_SESSION_COOKIE } from "../constants"
+import { hasEditPageAccess } from "../auth"
 
 type EditCollectionsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 export default async function EditCollectionsPage({ searchParams }: EditCollectionsPageProps) {
-  const cookieStore = await cookies()
   const params = (await searchParams) ?? {}
-  const isAuthenticated = cookieStore.get(EDIT_SESSION_COOKIE)?.value === "authenticated"
 
-  if (!isAuthenticated) {
+  if (!(await hasEditPageAccess())) {
     return <EditLoginPage error={params.error === "1" || params.error === "auth"} />
   }
 
-  const content = await getCollectionsContent()
+  const [content, collections] = await Promise.all([getCollectionsContent(), getCollections()])
   const saved = params.saved === "1"
 
   return (
@@ -81,7 +78,7 @@ export default async function EditCollectionsPage({ searchParams }: EditCollecti
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
-            {COLLECTIONS.map((collection) => (
+            {collections.map((collection) => (
               <div key={collection.id} className="group">
                 <div className="relative aspect-[4/5] overflow-hidden bg-secondary mb-4">
                   <Image

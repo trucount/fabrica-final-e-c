@@ -10,6 +10,7 @@ import { saveAboutContent, type AboutContent } from "@/lib/about-content"
 import { saveShopContent, type ShopContent } from "@/lib/shop-content"
 import { parseInfoPageSlug, saveInfoPageContent, type InfoPageContent } from "@/lib/info-page-content"
 import { EDIT_SESSION_COOKIE } from "./constants"
+import { requireEditPageAccess } from "./auth"
 
 const EDIT_PASSWORD = "sparrowaisoultions"
 
@@ -131,18 +132,13 @@ async function loginToEdit(formData: FormData, destination: string) {
     sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     path: "/edit",
-    maxAge: 60 * 60 * 8,
   })
 
   redirect(destination)
 }
 
 async function requireEditorSession(destination: string) {
-  const cookieStore = await cookies()
-
-  if (cookieStore.get(EDIT_SESSION_COOKIE)?.value !== "authenticated") {
-    redirect(destination)
-  }
+  await requireEditPageAccess(destination)
 }
 
 function requireSavePassword(formData: FormData) {

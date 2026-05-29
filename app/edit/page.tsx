@@ -1,4 +1,3 @@
-import { cookies } from "next/headers"
 import Link from "next/link"
 import { ArrowLeft, LogOut } from "lucide-react"
 import { CollectionsCarousel } from "@/components/collections-carousel"
@@ -11,27 +10,26 @@ import { EditSaveButton } from "@/components/edit-save-button"
 import { getAboutContent } from "@/lib/about-content"
 import { getHomeContent } from "@/lib/home-content"
 import { getSiteContent } from "@/lib/site-content"
-import { COLLECTIONS } from "@/lib/collections-data"
-import { EDIT_SESSION_COOKIE } from "./constants"
+import { getCollections } from "@/lib/collections-data"
 import { loginToHomeEdit, logoutFromEdit, saveEditedHomeContent } from "./actions"
+import { hasEditPageAccess } from "./auth"
 
 type EditHomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 export default async function EditHomePage({ searchParams }: EditHomePageProps) {
-  const cookieStore = await cookies()
   const params = (await searchParams) ?? {}
-  const isAuthenticated = cookieStore.get(EDIT_SESSION_COOKIE)?.value === "authenticated"
 
-  if (!isAuthenticated) {
+  if (!(await hasEditPageAccess())) {
     return <EditLoginPage error={params.error === "1" || params.error === "auth"} />
   }
 
-  const [aboutContent, homeContent, siteContent] = await Promise.all([
+  const [aboutContent, homeContent, siteContent, collections] = await Promise.all([
     getAboutContent(),
     getHomeContent(),
     getSiteContent(),
+    getCollections(),
   ])
   const saved = params.saved === "1"
 
@@ -67,6 +65,12 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
         <section className="container mx-auto px-4 sm:px-6 py-6">
           <div className="rounded-lg border p-4 space-y-3">
             <h2 className="font-serif text-2xl font-semibold">Site Header Text</h2>
+            <Input
+              name="brandName"
+              defaultValue={siteContent.brandName}
+              aria-label="Header brand name"
+              className="h-auto border-dashed font-serif text-2xl font-semibold tracking-tight"
+            />
             {siteContent.tickerMessages.map((message, index) => (
               <Input
                 key={index}
@@ -105,7 +109,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
               rows={2}
             />
             <Button asChild size="lg" className="h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
-              <Link href="/edit/shop">Explore Collection</Link>
+              <Link href="/edit/collections">Explore Collection</Link>
             </Button>
           </div>
         </section>
@@ -122,10 +126,10 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
               <Link href="/edit/collections">View All</Link>
             </Button>
           </div>
-          <CollectionsCarousel collections={COLLECTIONS} />
+          <CollectionsCarousel collections={collections} />
         </section>
 
-        <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
+        <section id="new-arrivals" className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 scroll-mt-20">
           <div className="flex items-center justify-between mb-8 sm:mb-12">
             <Input
               name="newArrivalsTitle"
@@ -140,7 +144,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
           <ProductGridCustom products={newArrivalProducts} />
         </section>
 
-        <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
+        <section id="best-sellers" className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 scroll-mt-20">
           <div className="flex items-center justify-between mb-8 sm:mb-12">
             <Input
               name="bestSellersTitle"
@@ -183,12 +187,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
           <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
               <div>
-                <Input
-                  name="brandName"
-                  defaultValue={siteContent.brandName}
-                  aria-label="Brand name"
-                  className="h-auto border-dashed font-serif text-xl font-semibold mb-4"
-                />
+                <h3 className="font-serif text-xl font-semibold mb-4">{siteContent.brandName}</h3>
                 <Textarea
                   name="footerTagline"
                   defaultValue={homeContent.footerTagline}
@@ -206,10 +205,10 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
                     <Link href="/edit/collections">Collections</Link>
                   </li>
                   <li>
-                    <Link href="/edit">{homeContent.newArrivalsTitle}</Link>
+                    <Link href="/edit#new-arrivals">{homeContent.newArrivalsTitle}</Link>
                   </li>
                   <li>
-                    <Link href="/edit">{homeContent.bestSellersTitle}</Link>
+                    <Link href="/edit#best-sellers">{homeContent.bestSellersTitle}</Link>
                   </li>
                 </ul>
               </div>

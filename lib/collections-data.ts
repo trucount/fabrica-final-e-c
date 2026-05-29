@@ -4,35 +4,154 @@ export type CollectionItem = {
   description: string
   image: string
   items: string
+  sortOrder: number
 }
 
-export const COLLECTIONS: CollectionItem[] = [
-  {
-    id: "executive",
-    name: "Executive Collection",
-    description: "Bold, sophisticated pieces for the modern power dresser. Featuring rich textures and commanding colors.",
-    image: "/thudarum-burgundy-evening-suit.jpg",
-    items: "12 items",
-  },
-  {
-    id: "heritage",
-    name: "Heritage Collection",
-    description: "Classic tailoring with timeless appeal. Traditional patterns reimagined for contemporary elegance.",
-    image: "/thudarum-green-check-blazer.jpg",
-    items: "8 items",
-  },
-  {
-    id: "contemporary",
-    name: "Contemporary Collection",
-    description: "Modern cuts and innovative styling for the forward-thinking gentleman.",
-    image: "/thudarum-sky-blue-blazer.jpg",
-    items: "10 items",
-  },
-  {
-    id: "evening",
-    name: "Evening Collection",
-    description: "Luxurious velvet and satin pieces designed to make a statement at formal occasions.",
-    image: "/thudarum-navy-velvet-blazer.jpg",
-    items: "6 items",
-  },
-]
+type CollectionRow = {
+  id: string
+  name: string
+  description: string
+  image_url: string
+  item_count_label: string
+  sort_order: number
+}
+
+export type CollectionInput = {
+  id: string
+  name: string
+  description: string
+  image: string
+  items: string
+  sortOrder: number
+}
+
+function getSupabaseConfig() {
+  const url = process.env.SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url || !serviceRoleKey) {
+    throw new Error("Supabase is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to Vercel.")
+  }
+
+  return {
+    url: url.replace(/\/$/, ""),
+    serviceRoleKey,
+  }
+}
+
+export async function getCollections(): Promise<CollectionItem[]> {
+  const config = getSupabaseConfig()
+  const response = await fetch(`${config.url}/rest/v1/collections?select=*&order=sort_order.asc,name.asc`, {
+    headers: getSupabaseHeaders(config.serviceRoleKey),
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to load collections from Supabase: ${await response.text()}`)
+  }
+
+  const rows = (await response.json()) as CollectionRow[]
+  return rows.map(parseCollectionRow)
+}
+
+export async function upsertCollection(collection: CollectionInput) {
+  const config = getSupabaseConfig()
+  const response = await fetch(`${config.url}/rest/v1/collections`, {
+    method: "POST",
+    headers: {
+      ...getSupabaseHeaders(config.serviceRoleKey),
+      "Content-Type": "application/json",
+      Prefer: "resolution=merge-duplicates",
+    },
+    body: JSON.stringify({
+      id: collection.id,
+      name: collection.name,
+      description: collection.description,
+      image_url: collection.image,
+      item_count_label: collection.items,
+      sort_order: collection.sortOrder,
+      updated_at: new Date().toISOString(),
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to save collection: ${await response.text()}`)
+  }
+}
+
+export async function deleteCollection(id: string) {
+  const config = getSupabaseConfig()
+  const response = await fetch(`${config.url}/rest/v1/collections?id=eq.${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: getSupabaseHeaders(config.serviceRoleKey),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete collection: ${await response.text()}`)
+  }
+}
+
+export async function uploadCollectionImage(file: File, collectionId: string) {
+  const config = getSupabaseConfig()
+  const extension = getFileExtension(file.name)
+  const objectPath = `collections/${collectionId}-${Date.now()}${extension}`
+  const response = await fetch(`${config.url}/storage/v1/object/pic/${objectPath}`, {
+    method: "POST",
+    headers: {
+      apikey: config.serviceRoleKey,
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+      "Content-Type": file.type || "application/octet-stream",
+      "x-upsert": "true",
+    },
+    body: file,
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to upload collection image: ${await response.text()}`)
+  }
+
+  return `${config.url}/storage/v1/object/public/pic/${objectPath}`
+}
+
+function parseCollectionRow(row: CollectionRow): CollectionItem {
+  return {
+    id: getString(row, "id"),
+    name: getString(row, "name"),
+    description: getString(row, "description"),
+    image: getString(row, "image_url"),
+    items: getString(row, "item_count_label"),
+    sortOrder: getNumber(row, "sort_order"),
+  }
+}
+
+function getSupabaseHeaders(serviceRoleKey: string) {
+  return {
+    apikey: serviceRoleKey,
+    Authorization: `Bearer ${serviceRoleKey}`,
+  }
+}
+
+function getFileExtension(fileName: string) {
+  const extension = fileName.includes(".") ? fileName.slice(fileName.lastIndexOf(".")) : ""
+  return extension.replace(/[^a-zA-Z0-9.]/g, "")
+}
+
+function getString(row: Record<string, unknown>, key: string) {
+  const value = row[key]
+
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`Supabase collections field "${key}" is required.`)
+  }
+
+  return value
+}
+
+function getNumber(row: Record<string, unknown>, key: string) {
+  const value = row[key]
+
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`Supabase collections field "${key}" must be a number.`)
+  }
+
+  return value
+}
