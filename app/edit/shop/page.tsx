@@ -1,4 +1,3 @@
-import { cookies } from "next/headers"
 import Link from "next/link"
 import { ArrowLeft, LogOut } from "lucide-react"
 import { Header } from "@/components/header"
@@ -8,18 +7,16 @@ import { Input } from "@/components/ui/input"
 import { EditSaveButton } from "@/components/edit-save-button"
 import { getShopContent } from "@/lib/shop-content"
 import { loginToShopEdit, logoutFromEdit, saveEditedShopContent } from "../actions"
-import { EDIT_SESSION_COOKIE } from "../constants"
+import { hasEditPageAccess } from "../auth"
 
 type EditShopPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 export default async function EditShopPage({ searchParams }: EditShopPageProps) {
-  const cookieStore = await cookies()
   const params = (await searchParams) ?? {}
-  const isAuthenticated = cookieStore.get(EDIT_SESSION_COOKIE)?.value === "authenticated"
 
-  if (!isAuthenticated) {
+  if (!(await hasEditPageAccess())) {
     return <EditLoginPage error={params.error === "1" || params.error === "auth"} />
   }
 

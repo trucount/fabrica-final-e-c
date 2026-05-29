@@ -10,6 +10,7 @@ import {
   type CollectionInput,
 } from "@/lib/collections-data"
 import { ADMIN_SESSION_COOKIE } from "./constants"
+import { requireAdminPageAccess } from "./auth"
 
 const ADMIN_PASSWORD = "sparrowaisoultions"
 
@@ -71,11 +72,7 @@ export async function deleteAdminCollection(formData: FormData) {
 }
 
 async function requireAdminSession() {
-  const cookieStore = await cookies()
-
-  if (cookieStore.get(ADMIN_SESSION_COOKIE)?.value !== "authenticated") {
-    redirect("/admin?error=auth")
-  }
+  await requireAdminPageAccess()
 }
 
 async function getCollectionInputFromForm(formData: FormData): Promise<CollectionInput> {

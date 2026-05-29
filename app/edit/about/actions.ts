@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { saveAboutContent, type AboutContent } from "@/lib/about-content"
 
 import { EDIT_SESSION_COOKIE } from "../constants"
+import { requireEditPageAccess } from "../auth"
 
 const EDIT_PASSWORD = "sparrowaisoultions"
 
@@ -22,7 +23,6 @@ export async function loginToEdit(formData: FormData) {
     sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     path: "/edit",
-    maxAge: 60 * 60 * 8,
   })
 
   redirect("/edit/about")
@@ -35,11 +35,7 @@ export async function logoutFromEdit() {
 }
 
 export async function saveEditedAboutContent(formData: FormData) {
-  const cookieStore = await cookies()
-
-  if (cookieStore.get(EDIT_SESSION_COOKIE)?.value !== "authenticated") {
-    redirect("/edit/about?error=auth")
-  }
+  await requireEditPageAccess("/edit/about?error=auth")
 
   if (String(formData.get("savePassword") ?? "") !== EDIT_PASSWORD) {
     throw new Error("Incorrect password. Changes were not saved.")

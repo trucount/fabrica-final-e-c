@@ -1,5 +1,4 @@
 import type { ReactNode } from "react"
-import { cookies } from "next/headers"
 import Image from "next/image"
 import { LogOut, Plus, Save, Trash2 } from "lucide-react"
 import { Header } from "@/components/header"
@@ -10,19 +9,17 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getCollections } from "@/lib/collections-data"
-import { ADMIN_SESSION_COOKIE } from "./constants"
 import { createAdminCollection, deleteAdminCollection, loginToAdmin, logoutFromAdmin, updateAdminCollection } from "./actions"
+import { hasAdminPageAccess } from "./auth"
 
 type AdminPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
-  const cookieStore = await cookies()
   const params = (await searchParams) ?? {}
-  const isAuthenticated = cookieStore.get(ADMIN_SESSION_COOKIE)?.value === "authenticated"
 
-  if (!isAuthenticated) {
+  if (!(await hasAdminPageAccess())) {
     return <AdminLoginPage error={params.error === "1" || params.error === "auth"} />
   }
 

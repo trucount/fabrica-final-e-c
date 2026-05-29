@@ -1,4 +1,3 @@
-import { cookies } from "next/headers"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, LogOut } from "lucide-react"
@@ -10,18 +9,16 @@ import { EditSaveButton } from "@/components/edit-save-button"
 import { getCollections } from "@/lib/collections-data"
 import { getCollectionsContent } from "@/lib/collections-content"
 import { loginToCollectionsEdit, logoutFromEdit, saveEditedCollectionsContent } from "../actions"
-import { EDIT_SESSION_COOKIE } from "../constants"
+import { hasEditPageAccess } from "../auth"
 
 type EditCollectionsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 export default async function EditCollectionsPage({ searchParams }: EditCollectionsPageProps) {
-  const cookieStore = await cookies()
   const params = (await searchParams) ?? {}
-  const isAuthenticated = cookieStore.get(EDIT_SESSION_COOKIE)?.value === "authenticated"
 
-  if (!isAuthenticated) {
+  if (!(await hasEditPageAccess())) {
     return <EditLoginPage error={params.error === "1" || params.error === "auth"} />
   }
 

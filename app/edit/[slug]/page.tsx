@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation"
-import { cookies } from "next/headers"
 import Link from "next/link"
 import { ArrowLeft, LogOut } from "lucide-react"
 import { Header } from "@/components/header"
@@ -9,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { EditSaveButton } from "@/components/edit-save-button"
 import { getInfoPageContent, parseInfoPageSlug } from "@/lib/info-page-content"
 import { loginToInfoPageEdit, logoutFromEdit, saveEditedInfoPageContent } from "../actions"
-import { EDIT_SESSION_COOKIE } from "../constants"
+import { hasEditPageAccess } from "../auth"
 
 type EditInfoPageProps = {
   params: Promise<{ slug: string }>
@@ -26,11 +25,9 @@ export default async function EditInfoPage({ params, searchParams }: EditInfoPag
     notFound()
   }
 
-  const cookieStore = await cookies()
   const query = (await searchParams) ?? {}
-  const isAuthenticated = cookieStore.get(EDIT_SESSION_COOKIE)?.value === "authenticated"
 
-  if (!isAuthenticated) {
+  if (!(await hasEditPageAccess())) {
     return <EditLoginPage slug={slug} error={query.error === "1" || query.error === "auth"} />
   }
 

@@ -1,4 +1,3 @@
-import { cookies } from "next/headers"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, LogOut } from "lucide-react"
@@ -13,19 +12,17 @@ import { getAboutContent } from "@/lib/about-content"
 import { getHomeContent } from "@/lib/home-content"
 import { getSiteContent } from "@/lib/site-content"
 import { getCollections } from "@/lib/collections-data"
-import { EDIT_SESSION_COOKIE } from "./constants"
 import { loginToHomeEdit, logoutFromEdit, saveEditedHomeContent } from "./actions"
+import { hasEditPageAccess } from "./auth"
 
 type EditHomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 export default async function EditHomePage({ searchParams }: EditHomePageProps) {
-  const cookieStore = await cookies()
   const params = (await searchParams) ?? {}
-  const isAuthenticated = cookieStore.get(EDIT_SESSION_COOKIE)?.value === "authenticated"
 
-  if (!isAuthenticated) {
+  if (!(await hasEditPageAccess())) {
     return <EditLoginPage error={params.error === "1" || params.error === "auth"} />
   }
 
