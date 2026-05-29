@@ -61,7 +61,7 @@ export function AboutSections({ content, roundedImage = false, showHero = true }
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold mb-6">{content.ctaTitle}</h2>
           <p className="text-muted-foreground mb-8 text-base sm:text-lg">{content.ctaDescription}</p>
           <Button asChild size="lg" className="h-12 px-8">
-            <Link href="/shop">Explore Collection</Link>
+            <Link href="/collections">Explore Collection</Link>
           </Button>
         </div>
       </section>

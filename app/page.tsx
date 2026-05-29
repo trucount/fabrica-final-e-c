@@ -38,7 +38,7 @@ export default async function Home() {
             {homeContent.heroSubtitle}
           </p>
           <Button asChild size="lg" className="h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
-            <Link href="/shop">Explore Collection</Link>
+            <Link href="/collections">Explore Collection</Link>
           </Button>
         </div>
       </section>
@@ -155,7 +155,7 @@ export default async function Home() {
                   <Link href="/collections">Collections</Link>
                 </li>
                 <li>
-                  <Link href="/new">{homeContent.newArrivalsTitle}</Link>
+                  <Link href="/shop?section=new-arrivals">{homeContent.newArrivalsTitle}</Link>
                 </li>
                 <li>
                   <Link href="/shop?section=best-sellers">{homeContent.bestSellersTitle}</Link>

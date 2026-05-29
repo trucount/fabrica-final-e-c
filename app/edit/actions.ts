@@ -131,7 +131,6 @@ async function loginToEdit(formData: FormData, destination: string) {
     sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     path: "/edit",
-    maxAge: 60 * 60 * 8,
   })
 
   redirect(destination)
