@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { getAboutContent } from "@/lib/about-content"
 import { loginToEdit, logoutFromEdit, saveEditedAboutContent } from "./actions"
-import { EDIT_SESSION_COOKIE } from "./constants"
+import { EDIT_SESSION_COOKIE } from "../constants"
 
 type EditAboutPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>

@@ -5,9 +5,11 @@ import { ProductGridCustom } from "@/components/product-grid-custom"
 import { CollectionsCarousel } from "@/components/collections-carousel"
 import { AboutSections } from "@/components/about-sections"
 import { getAboutContent } from "@/lib/about-content"
+import { getHomeContent } from "@/lib/home-content"
+import { COLLECTIONS } from "@/lib/collections-data"
 
 export default async function Home() {
-  const aboutContent = await getAboutContent()
+  const [aboutContent, homeContent] = await Promise.all([getAboutContent(), getHomeContent()])
 
   return (
     <div className="min-h-screen">
@@ -29,10 +31,10 @@ export default async function Home() {
 
         <div className="relative z-10 text-center px-4 text-white">
           <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-4 sm:mb-6 tracking-tight text-balance drop-shadow-lg">
-            Refined Simplicity
+            {homeContent.heroTitle}
           </h1>
           <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto text-balance drop-shadow-md text-white/90">
-            Discover timeless pieces crafted for the modern wardrobe
+            {homeContent.heroSubtitle}
           </p>
           <Button asChild size="lg" className="h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
             <Link href="/shop">Explore Collection</Link>
@@ -43,18 +45,18 @@ export default async function Home() {
       {/* Collections Slider */}
       <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
         <div className="flex items-center justify-between mb-8 sm:mb-12">
-          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold">Collections</h2>
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold">{homeContent.collectionsTitle}</h2>
           <Button variant="ghost" asChild className="text-sm sm:text-base">
             <Link href="/collections">View All</Link>
           </Button>
         </div>
-        <CollectionsCarousel />
+        <CollectionsCarousel collections={COLLECTIONS} />
       </section>
 
       {/* New Arrivals */}
       <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
         <div className="flex items-center justify-between mb-8 sm:mb-12">
-          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold">New Arrivals</h2>
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold">{homeContent.newArrivalsTitle}</h2>
           <Button variant="ghost" asChild className="text-sm sm:text-base">
             <Link href="/shop">View All</Link>
           </Button>
@@ -94,7 +96,7 @@ export default async function Home() {
       {/* Best Sellers */}
       <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
         <div className="flex items-center justify-between mb-8 sm:mb-12">
-          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold">Best Sellers</h2>
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold">{homeContent.bestSellersTitle}</h2>
           <Button variant="ghost" asChild className="text-sm sm:text-base">
             <Link href="/shop">View All</Link>
           </Button>
@@ -140,7 +142,7 @@ export default async function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             <div>
               <h3 className="font-serif text-xl font-semibold mb-4">THUDARUM</h3>
-              <p className="text-sm text-muted-foreground">Contemporary fashion for the discerning individual.</p>
+              <p className="text-sm text-muted-foreground">{homeContent.footerTagline}</p>
             </div>
             <div>
               <h4 className="font-medium mb-4">Shop</h4>
@@ -152,7 +154,10 @@ export default async function Home() {
                   <Link href="/collections">Collections</Link>
                 </li>
                 <li>
-                  <Link href="/new">New Arrivals</Link>
+                  <Link href="/new">{homeContent.newArrivalsTitle}</Link>
+                </li>
+                <li>
+                  <Link href="/shop?section=best-sellers">{homeContent.bestSellersTitle}</Link>
                 </li>
               </ul>
             </div>

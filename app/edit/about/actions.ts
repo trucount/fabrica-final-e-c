@@ -5,7 +5,7 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { saveAboutContent, type AboutContent } from "@/lib/about-content"
 
-import { EDIT_SESSION_COOKIE } from "./constants"
+import { EDIT_SESSION_COOKIE } from "../constants"
 
 const EDIT_PASSWORD = "sparrowaisoultions"
 
