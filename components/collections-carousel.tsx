@@ -3,6 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import type { CollectionContentItem } from "@/lib/collections-content"
 import {
   Carousel,
   CarouselContent,
@@ -11,38 +12,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 
-export function CollectionsCarousel() {
-  const collections = [
-    {
-      id: "executive",
-      name: "Executive Collection",
-      description: "Bold, sophisticated pieces for the modern power dresser.",
-      image: "/thudarum-burgundy-evening-suit.jpg",
-      items: "12 items",
-    },
-    {
-      id: "heritage",
-      name: "Heritage Collection",
-      description: "Classic tailoring with timeless appeal.",
-      image: "/thudarum-green-check-blazer.jpg",
-      items: "8 items",
-    },
-    {
-      id: "contemporary",
-      name: "Contemporary Collection",
-      description: "Modern cuts and innovative styling.",
-      image: "/thudarum-sky-blue-blazer.jpg",
-      items: "10 items",
-    },
-    {
-      id: "evening",
-      name: "Evening Collection",
-      description: "Luxurious velvet and satin pieces.",
-      image: "/thudarum-navy-velvet-blazer.jpg",
-      items: "6 items",
-    },
-  ]
-
+export function CollectionsCarousel({ collections }: { collections: CollectionContentItem[] }) {
   return (
     <Carousel className="w-full">
       <CarouselContent className="-ml-2 md:-ml-4">
@@ -51,7 +21,7 @@ export function CollectionsCarousel() {
             <Link href={`/shop?collection=${collection.id}`} className="group block">
               <div className="relative aspect-[4/5] overflow-hidden bg-secondary mb-4 rounded-lg">
                 <Image
-                  src={collection.image || "/placeholder.svg"}
+                  src={collection.image}
                   alt={collection.name}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"

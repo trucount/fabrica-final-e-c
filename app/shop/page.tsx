@@ -3,8 +3,11 @@ import { ProductGrid } from "@/components/product-grid"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { getShopContent } from "@/lib/shop-content"
 
-export default function ShopPage() {
+export default async function ShopPage() {
+  const content = await getShopContent()
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -16,7 +19,7 @@ export default function ShopPage() {
           </Link>
         </Button>
 
-        <h1 className="font-serif text-4xl md:text-5xl font-semibold mb-8">All Products</h1>
+        <h1 className="font-serif text-4xl md:text-5xl font-semibold mb-8">{content.title}</h1>
         <ProductGrid />
       </div>
     </div>

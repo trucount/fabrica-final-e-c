@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { ShoppingBag, User, Menu } from "lucide-react"
 import { useCart } from "./cart-provider"
 import { Button } from "./ui/button"
@@ -10,24 +11,30 @@ import { useState } from "react"
 export function Header() {
   const { itemCount } = useCart()
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
+  const isEditing = pathname.startsWith("/edit")
+  const homeHref = isEditing ? "/edit" : "/"
+  const shopHref = isEditing ? "/edit/shop" : "/shop"
+  const collectionsHref = isEditing ? "/edit/collections" : "/collections"
+  const aboutHref = isEditing ? "/edit/about" : "/about"
 
   return (
     <header className="relative w-full border-b border-border bg-background">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo */}
-        <Link href="/" className="font-serif text-2xl font-semibold tracking-tight">
+        <Link href={homeHref} className="font-serif text-2xl font-semibold tracking-tight">
           THUDARUM
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
-          <Link href="/shop" className="text-sm font-medium hover:text-muted-foreground transition-colors">
+          <Link href={shopHref} className="text-sm font-medium hover:text-muted-foreground transition-colors">
             Shop
           </Link>
-          <Link href="/collections" className="text-sm font-medium hover:text-muted-foreground transition-colors">
+          <Link href={collectionsHref} className="text-sm font-medium hover:text-muted-foreground transition-colors">
             Collections
           </Link>
-          <Link href="/about" className="text-sm font-medium hover:text-muted-foreground transition-colors">
+          <Link href={aboutHref} className="text-sm font-medium hover:text-muted-foreground transition-colors">
             About
           </Link>
         </nav>
@@ -68,21 +75,21 @@ export function Header() {
 
                 <nav className="flex flex-col gap-0">
                   <Link
-                    href="/shop"
+                    href={shopHref}
                     onClick={() => setOpen(false)}
                     className="text-lg font-medium py-5 px-4 border-b border-border hover:bg-accent transition-colors"
                   >
                     Shop
                   </Link>
                   <Link
-                    href="/collections"
+                    href={collectionsHref}
                     onClick={() => setOpen(false)}
                     className="text-lg font-medium py-5 px-4 border-b border-border hover:bg-accent transition-colors"
                   >
                     Collections
                   </Link>
                   <Link
-                    href="/about"
+                    href={aboutHref}
                     onClick={() => setOpen(false)}
                     className="text-lg font-medium py-5 px-4 border-b border-border hover:bg-accent transition-colors"
                   >
