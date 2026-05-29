@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { EditSaveButton } from "@/components/edit-save-button"
-import { COLLECTIONS } from "@/lib/collections-data"
+import { getCollections } from "@/lib/collections-data"
 import { getCollectionsContent } from "@/lib/collections-content"
 import { loginToCollectionsEdit, logoutFromEdit, saveEditedCollectionsContent } from "../actions"
 import { EDIT_SESSION_COOKIE } from "../constants"
@@ -25,7 +25,7 @@ export default async function EditCollectionsPage({ searchParams }: EditCollecti
     return <EditLoginPage error={params.error === "1" || params.error === "auth"} />
   }
 
-  const content = await getCollectionsContent()
+  const [content, collections] = await Promise.all([getCollectionsContent(), getCollections()])
   const saved = params.saved === "1"
 
   return (
@@ -81,7 +81,7 @@ export default async function EditCollectionsPage({ searchParams }: EditCollecti
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
-            {COLLECTIONS.map((collection) => (
+            {collections.map((collection) => (
               <div key={collection.id} className="group">
                 <div className="relative aspect-[4/5] overflow-hidden bg-secondary mb-4">
                   <Image
