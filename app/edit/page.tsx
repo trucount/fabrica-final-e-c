@@ -1,15 +1,16 @@
 import { cookies } from "next/headers"
 import Link from "next/link"
-import { ArrowLeft, LogOut, Save } from "lucide-react"
-import { AboutSections } from "@/components/about-sections"
+import { ArrowLeft, LogOut } from "lucide-react"
 import { CollectionsCarousel } from "@/components/collections-carousel"
 import { Header } from "@/components/header"
 import { ProductGridCustom } from "@/components/product-grid-custom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { EditSaveButton } from "@/components/edit-save-button"
 import { getAboutContent } from "@/lib/about-content"
 import { getHomeContent } from "@/lib/home-content"
+import { getSiteContent } from "@/lib/site-content"
 import { COLLECTIONS } from "@/lib/collections-data"
 import { EDIT_SESSION_COOKIE } from "./constants"
 import { loginToHomeEdit, logoutFromEdit, saveEditedHomeContent } from "./actions"
@@ -27,7 +28,11 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
     return <EditLoginPage error={params.error === "1" || params.error === "auth"} />
   }
 
-  const [aboutContent, homeContent] = await Promise.all([getAboutContent(), getHomeContent()])
+  const [aboutContent, homeContent, siteContent] = await Promise.all([
+    getAboutContent(),
+    getHomeContent(),
+    getSiteContent(),
+  ])
   const saved = params.saved === "1"
 
   return (
@@ -52,15 +57,27 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
                 Logout
               </Button>
             </form>
-            <Button form="home-edit-form" type="submit">
-              <Save className="h-4 w-4 mr-2" />
-              Save Text
-            </Button>
+            <EditSaveButton form="home-edit-form" />
           </div>
         </div>
       </div>
 
       <form id="home-edit-form" action={saveEditedHomeContent}>
+        <input type="hidden" name="savePassword" />
+        <section className="container mx-auto px-4 sm:px-6 py-6">
+          <div className="rounded-lg border p-4 space-y-3">
+            <h2 className="font-serif text-2xl font-semibold">Site Header Text</h2>
+            {siteContent.tickerMessages.map((message, index) => (
+              <Input
+                key={index}
+                name="tickerMessages"
+                defaultValue={message}
+                aria-label={`Ticker message ${index + 1}`}
+                className="border-dashed"
+              />
+            ))}
+          </div>
+        </section>
         <section className="relative h-[60vh] sm:h-[70vh] flex items-center justify-center bg-black overflow-hidden">
           <div className="absolute inset-0 w-full h-full">
             <iframe
@@ -88,7 +105,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
               rows={2}
             />
             <Button asChild size="lg" className="h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
-              <Link href="/shop">Explore Collection</Link>
+              <Link href="/edit/shop">Explore Collection</Link>
             </Button>
           </div>
         </section>
@@ -102,7 +119,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
               className="h-auto max-w-sm border-dashed font-serif text-2xl sm:text-3xl md:text-4xl font-semibold"
             />
             <Button variant="ghost" asChild className="text-sm sm:text-base">
-              <Link href="/collections">View All</Link>
+              <Link href="/edit/collections">View All</Link>
             </Button>
           </div>
           <CollectionsCarousel collections={COLLECTIONS} />
@@ -117,7 +134,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
               className="h-auto max-w-sm border-dashed font-serif text-2xl sm:text-3xl md:text-4xl font-semibold"
             />
             <Button variant="ghost" asChild className="text-sm sm:text-base">
-              <Link href="/shop">View All</Link>
+              <Link href="/edit/shop">View All</Link>
             </Button>
           </div>
           <ProductGridCustom products={newArrivalProducts} />
@@ -132,19 +149,46 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
               className="h-auto max-w-sm border-dashed font-serif text-2xl sm:text-3xl md:text-4xl font-semibold"
             />
             <Button variant="ghost" asChild className="text-sm sm:text-base">
-              <Link href="/shop">View All</Link>
+              <Link href="/edit/shop">View All</Link>
             </Button>
           </div>
           <ProductGridCustom products={bestSellerProducts} />
         </section>
 
-        <AboutSections content={aboutContent} roundedImage showHero={false} />
+        <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
+          <div className="rounded-lg border p-4 sm:p-6 mb-8">
+            <h2 className="font-serif text-2xl font-semibold mb-4">Shared About Sections</h2>
+            <p className="text-sm text-muted-foreground">Changes here also update the About page.</p>
+          </div>
+          <div className="space-y-6">
+            <Input name="about.heroTitle" defaultValue={aboutContent.heroTitle} aria-label="About hero title" className="h-auto border-dashed font-serif text-3xl font-semibold" />
+            <Textarea name="about.heroSubtitle" defaultValue={aboutContent.heroSubtitle} aria-label="About hero subtitle" className="border-dashed" />
+            <Input name="about.storyTitle" defaultValue={aboutContent.storyTitle} aria-label="About story title" className="h-auto border-dashed font-serif text-3xl font-semibold" />
+            {aboutContent.storyParagraphs.map((paragraph, index) => (
+              <Textarea key={index} name="about.storyParagraphs" defaultValue={paragraph} aria-label={`About story paragraph ${index + 1}`} className="min-h-28 border-dashed" />
+            ))}
+            <Input name="about.valuesTitle" defaultValue={aboutContent.valuesTitle} aria-label="About values title" className="h-auto border-dashed font-serif text-3xl font-semibold" />
+            {aboutContent.values.map((value, index) => (
+              <div key={index} className="grid gap-3 sm:grid-cols-2">
+                <Input name={`about.values.${index}.title`} defaultValue={value.title} aria-label={`About value ${index + 1} title`} className="border-dashed" />
+                <Textarea name={`about.values.${index}.description`} defaultValue={value.description} aria-label={`About value ${index + 1} description`} className="border-dashed" />
+              </div>
+            ))}
+            <Input name="about.ctaTitle" defaultValue={aboutContent.ctaTitle} aria-label="About CTA title" className="h-auto border-dashed font-serif text-3xl font-semibold" />
+            <Textarea name="about.ctaDescription" defaultValue={aboutContent.ctaDescription} aria-label="About CTA description" className="border-dashed" />
+          </div>
+        </section>
 
         <footer className="border-t border-border mt-16 sm:mt-24">
           <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
               <div>
-                <h3 className="font-serif text-xl font-semibold mb-4">THUDARUM</h3>
+                <Input
+                  name="brandName"
+                  defaultValue={siteContent.brandName}
+                  aria-label="Brand name"
+                  className="h-auto border-dashed font-serif text-xl font-semibold mb-4"
+                />
                 <Textarea
                   name="footerTagline"
                   defaultValue={homeContent.footerTagline}
@@ -156,16 +200,16 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
                 <h4 className="font-medium mb-4">Shop</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li>
-                    <Link href="/shop">All Products</Link>
+                    <Link href="/edit/shop">All Products</Link>
                   </li>
                   <li>
-                    <Link href="/collections">Collections</Link>
+                    <Link href="/edit/collections">Collections</Link>
                   </li>
                   <li>
-                    <Link href="/new">{homeContent.newArrivalsTitle}</Link>
+                    <Link href="/edit">{homeContent.newArrivalsTitle}</Link>
                   </li>
                   <li>
-                    <Link href="/shop?section=best-sellers">{homeContent.bestSellersTitle}</Link>
+                    <Link href="/edit">{homeContent.bestSellersTitle}</Link>
                   </li>
                 </ul>
               </div>
@@ -173,13 +217,13 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
                 <h4 className="font-medium mb-4">Support</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li>
-                    <Link href="/contact">Contact</Link>
+                    <Link href="/edit/contact">Contact</Link>
                   </li>
                   <li>
-                    <Link href="/shipping">Shipping</Link>
+                    <Link href="/edit/shipping">Shipping</Link>
                   </li>
                   <li>
-                    <Link href="/returns">Returns</Link>
+                    <Link href="/edit/returns">Returns</Link>
                   </li>
                 </ul>
               </div>
@@ -187,16 +231,16 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
                 <h4 className="font-medium mb-4">Legal</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li>
-                    <Link href="/privacy">Privacy</Link>
+                    <Link href="/edit/privacy">Privacy</Link>
                   </li>
                   <li>
-                    <Link href="/terms">Terms</Link>
+                    <Link href="/edit/terms">Terms</Link>
                   </li>
                 </ul>
               </div>
             </div>
             <div className="border-t border-border mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-xs sm:text-sm text-muted-foreground">
-              <p>&copy; 2025 THUDARUM. All rights reserved.</p>
+              <p>Powered by Sparrow AI Solutions</p>
             </div>
           </div>
         </footer>

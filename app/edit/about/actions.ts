@@ -41,6 +41,10 @@ export async function saveEditedAboutContent(formData: FormData) {
     redirect("/edit/about?error=auth")
   }
 
+  if (String(formData.get("savePassword") ?? "") !== EDIT_PASSWORD) {
+    throw new Error("Incorrect password. Changes were not saved.")
+  }
+
   const content: AboutContent = {
     heroTitle: getRequiredText(formData, "heroTitle"),
     heroSubtitle: getRequiredText(formData, "heroSubtitle"),

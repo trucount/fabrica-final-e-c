@@ -6,10 +6,11 @@ import { CollectionsCarousel } from "@/components/collections-carousel"
 import { AboutSections } from "@/components/about-sections"
 import { getAboutContent } from "@/lib/about-content"
 import { getHomeContent } from "@/lib/home-content"
+import { getSiteContent } from "@/lib/site-content"
 import { COLLECTIONS } from "@/lib/collections-data"
 
 export default async function Home() {
-  const [aboutContent, homeContent] = await Promise.all([getAboutContent(), getHomeContent()])
+  const [aboutContent, homeContent, siteContent] = await Promise.all([getAboutContent(), getHomeContent(), getSiteContent()])
 
   return (
     <div className="min-h-screen">
@@ -141,7 +142,7 @@ export default async function Home() {
         <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             <div>
-              <h3 className="font-serif text-xl font-semibold mb-4">THUDARUM</h3>
+              <h3 className="font-serif text-xl font-semibold mb-4">{siteContent.brandName}</h3>
               <p className="text-sm text-muted-foreground">{homeContent.footerTagline}</p>
             </div>
             <div>
@@ -188,7 +189,7 @@ export default async function Home() {
             </div>
           </div>
           <div className="border-t border-border mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-xs sm:text-sm text-muted-foreground">
-            <p>&copy; 2025 THUDARUM. All rights reserved.</p>
+            <p>Powered by Sparrow AI Solutions</p>
           </div>
         </div>
       </footer>

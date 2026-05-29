@@ -1,11 +1,12 @@
 import { cookies } from "next/headers"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, LogOut, Save } from "lucide-react"
+import { ArrowLeft, LogOut } from "lucide-react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { EditSaveButton } from "@/components/edit-save-button"
 import { getAboutContent } from "@/lib/about-content"
 import { loginToEdit, logoutFromEdit, saveEditedAboutContent } from "./actions"
 import { EDIT_SESSION_COOKIE } from "../constants"
@@ -48,15 +49,13 @@ export default async function EditAboutPage({ searchParams }: EditAboutPageProps
                 Logout
               </Button>
             </form>
-            <Button form="about-edit-form" type="submit">
-              <Save className="h-4 w-4 mr-2" />
-              Save Text
-            </Button>
+            <EditSaveButton form="about-edit-form" />
           </div>
         </div>
       </div>
 
       <form id="about-edit-form" action={saveEditedAboutContent}>
+        <input type="hidden" name="savePassword" />
         <section className="relative h-[50vh] sm:h-[60vh] flex items-center justify-center bg-secondary">
           <div className="absolute inset-0 bg-[url('/thudarum-burgundy-evening-suit.jpg')] bg-cover bg-center opacity-80" />
           <div className="relative z-10 text-center px-4 w-full max-w-4xl">

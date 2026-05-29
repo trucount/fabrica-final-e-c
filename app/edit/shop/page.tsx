@@ -1,10 +1,11 @@
 import { cookies } from "next/headers"
 import Link from "next/link"
-import { ArrowLeft, LogOut, Save } from "lucide-react"
+import { ArrowLeft, LogOut } from "lucide-react"
 import { Header } from "@/components/header"
 import { ProductGrid } from "@/components/product-grid"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { EditSaveButton } from "@/components/edit-save-button"
 import { getShopContent } from "@/lib/shop-content"
 import { loginToShopEdit, logoutFromEdit, saveEditedShopContent } from "../actions"
 import { EDIT_SESSION_COOKIE } from "../constants"
@@ -47,15 +48,13 @@ export default async function EditShopPage({ searchParams }: EditShopPageProps) 
                 Logout
               </Button>
             </form>
-            <Button form="shop-edit-form" type="submit">
-              <Save className="h-4 w-4 mr-2" />
-              Save Text
-            </Button>
+            <EditSaveButton form="shop-edit-form" />
           </div>
         </div>
       </div>
 
       <form id="shop-edit-form" action={saveEditedShopContent}>
+        <input type="hidden" name="savePassword" />
         <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
           <Button variant="ghost" asChild className="mb-4">
             <Link href="/">

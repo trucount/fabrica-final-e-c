@@ -3,14 +3,16 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ShoppingBag, User, Menu } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useCart } from "./cart-provider"
 import { Button } from "./ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet"
-import { useState } from "react"
+import type { SiteContent } from "@/lib/site-content"
 
 export function Header() {
   const { itemCount } = useCart()
   const [open, setOpen] = useState(false)
+  const [siteContent, setSiteContent] = useState<SiteContent | null>(null)
   const pathname = usePathname()
   const isEditing = pathname.startsWith("/edit")
   const homeHref = isEditing ? "/edit" : "/"
@@ -18,15 +20,40 @@ export function Header() {
   const collectionsHref = isEditing ? "/edit/collections" : "/collections"
   const aboutHref = isEditing ? "/edit/about" : "/about"
 
+  useEffect(() => {
+    let isMounted = true
+
+    fetch("/api/site-content")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to load site content")
+        }
+
+        return response.json() as Promise<SiteContent>
+      })
+      .then((content) => {
+        if (isMounted) {
+          setSiteContent(content)
+        }
+      })
+      .catch((error) => {
+        console.error(error)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const brandName = siteContent?.brandName ?? ""
+
   return (
     <header className="relative w-full border-b border-border bg-background">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-        {/* Logo */}
         <Link href={homeHref} className="font-serif text-2xl font-semibold tracking-tight">
-          THUDARUM
+          {brandName}
         </Link>
 
-        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
           <Link href={shopHref} className="text-sm font-medium hover:text-muted-foreground transition-colors">
             Shop
@@ -39,7 +66,6 @@ export function Header() {
           </Link>
         </nav>
 
-        {/* Actions */}
         <div className="flex items-center gap-4">
           <Link href="/profile">
             <Button variant="ghost" size="icon" className="hidden md:flex">
@@ -71,7 +97,7 @@ export function Header() {
               className="w-[85vw] sm:w-[350px] px-6 [&>button]:border-0 [&>button]:shadow-none [&>button]:ring-0 [&>button]:top-8"
             >
               <div className="flex flex-col gap-8 pt-8">
-                <div className="font-serif text-2xl font-semibold tracking-tight">THUDARUM</div>
+                <div className="font-serif text-2xl font-semibold tracking-tight">{brandName}</div>
 
                 <nav className="flex flex-col gap-0">
                   <Link

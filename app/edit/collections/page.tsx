@@ -1,11 +1,12 @@
 import { cookies } from "next/headers"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, LogOut, Save } from "lucide-react"
+import { ArrowLeft, LogOut } from "lucide-react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { EditSaveButton } from "@/components/edit-save-button"
 import { COLLECTIONS } from "@/lib/collections-data"
 import { getCollectionsContent } from "@/lib/collections-content"
 import { loginToCollectionsEdit, logoutFromEdit, saveEditedCollectionsContent } from "../actions"
@@ -49,15 +50,13 @@ export default async function EditCollectionsPage({ searchParams }: EditCollecti
                 Logout
               </Button>
             </form>
-            <Button form="collections-edit-form" type="submit">
-              <Save className="h-4 w-4 mr-2" />
-              Save Text
-            </Button>
+            <EditSaveButton form="collections-edit-form" />
           </div>
         </div>
       </div>
 
       <form id="collections-edit-form" action={saveEditedCollectionsContent}>
+        <input type="hidden" name="savePassword" />
         <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
           <Button variant="ghost" asChild className="mb-6">
             <Link href="/">
