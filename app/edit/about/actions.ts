@@ -35,24 +35,25 @@ export async function logoutFromEdit() {
 }
 
 export async function saveEditedAboutContent(formData: FormData) {
-  await requireEditPageAccess("/edit/about?error=auth")
+  const destination = "/edit/about"
+  await requireEditPageAccess(`${destination}?error=auth`)
 
   if (String(formData.get("savePassword") ?? "") !== EDIT_PASSWORD) {
-    throw new Error("Incorrect password. Changes were not saved.")
+    redirect(`${destination}?error=save`)
   }
 
   const content: AboutContent = {
-    heroTitle: getRequiredText(formData, "heroTitle"),
-    heroSubtitle: getRequiredText(formData, "heroSubtitle"),
-    storyTitle: getRequiredText(formData, "storyTitle"),
-    storyParagraphs: formData.getAll("storyParagraphs").map(toText).filter(Boolean),
-    valuesTitle: getRequiredText(formData, "valuesTitle"),
+    heroTitle: getRequiredText(formData, "heroTitle", destination),
+    heroSubtitle: getRequiredText(formData, "heroSubtitle", destination),
+    storyTitle: getRequiredText(formData, "storyTitle", destination),
+    storyParagraphs: getRequiredTextList(formData, "storyParagraphs", destination),
+    valuesTitle: getRequiredText(formData, "valuesTitle", destination),
     values: [0, 1, 2].map((index) => ({
-      title: getRequiredText(formData, `values.${index}.title`),
-      description: getRequiredText(formData, `values.${index}.description`),
+      title: getRequiredText(formData, `values.${index}.title`, destination),
+      description: getRequiredText(formData, `values.${index}.description`, destination),
     })),
-    ctaTitle: getRequiredText(formData, "ctaTitle"),
-    ctaDescription: getRequiredText(formData, "ctaDescription"),
+    ctaTitle: getRequiredText(formData, "ctaTitle", destination),
+    ctaDescription: getRequiredText(formData, "ctaDescription", destination),
   }
 
   await saveAboutContent(content)
@@ -63,14 +64,24 @@ export async function saveEditedAboutContent(formData: FormData) {
   redirect("/edit/about?saved=1")
 }
 
-function getRequiredText(formData: FormData, key: string) {
+function getRequiredText(formData: FormData, key: string, destination: string) {
   const value = toText(formData.get(key))
 
   if (!value) {
-    throw new Error(`${key} is required`)
+    redirect(`${destination}?error=required`)
   }
 
   return value
+}
+
+function getRequiredTextList(formData: FormData, key: string, destination: string) {
+  const values = formData.getAll(key).map(toText).filter(Boolean)
+
+  if (!values.length) {
+    redirect(`${destination}?error=required`)
+  }
+
+  return values
 }
 
 function toText(value: FormDataEntryValue | null) {
