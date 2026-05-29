@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { EditSaveButton } from "@/components/edit-save-button"
+import { EditStatusMessage } from "../status-message"
 import { getInfoPageContent, parseInfoPageSlug } from "@/lib/info-page-content"
 import { loginToInfoPageEdit, logoutFromEdit, saveEditedInfoPageContent } from "../actions"
 import { hasEditPageAccess } from "../auth"
@@ -32,7 +33,6 @@ export default async function EditInfoPage({ params, searchParams }: EditInfoPag
   }
 
   const content = await getInfoPageContent(slug)
-  const saved = query.saved === "1"
   const title = slug.charAt(0).toUpperCase() + slug.slice(1)
 
   return (
@@ -47,7 +47,7 @@ export default async function EditInfoPage({ params, searchParams }: EditInfoPag
                 View {title} Page
               </Link>
             </Button>
-            {saved ? <p className="text-sm text-green-600">Saved. {title} page is updated.</p> : null}
+            <EditStatusMessage error={query.error} saved={query.saved} successMessage={`Saved. ${title} page is updated.`} />
           </div>
           <div className="flex gap-2">
             <form action={logoutFromEdit}>

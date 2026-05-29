@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { EditSaveButton } from "@/components/edit-save-button"
+import { EditStatusMessage } from "../status-message"
 import { getAboutContent } from "@/lib/about-content"
 import { loginToEdit, logoutFromEdit, saveEditedAboutContent } from "./actions"
 import { hasEditPageAccess } from "../auth"
@@ -22,7 +23,6 @@ export default async function EditAboutPage({ searchParams }: EditAboutPageProps
   }
 
   const content = await getAboutContent()
-  const saved = params.saved === "1"
 
   return (
     <div className="min-h-screen">
@@ -37,7 +37,7 @@ export default async function EditAboutPage({ searchParams }: EditAboutPageProps
                 View About Page
               </Link>
             </Button>
-            {saved ? <p className="text-sm text-green-600">Saved. Home and About are updated.</p> : null}
+            <EditStatusMessage error={params.error} saved={params.saved} successMessage="Saved. Home and About are updated." />
           </div>
           <div className="flex gap-2">
             <form action={logoutFromEdit}>

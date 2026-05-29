@@ -5,6 +5,7 @@ import { ProductGrid } from "@/components/product-grid"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { EditSaveButton } from "@/components/edit-save-button"
+import { EditStatusMessage } from "../status-message"
 import { getShopContent } from "@/lib/shop-content"
 import { loginToShopEdit, logoutFromEdit, saveEditedShopContent } from "../actions"
 import { hasEditPageAccess } from "../auth"
@@ -21,7 +22,6 @@ export default async function EditShopPage({ searchParams }: EditShopPageProps) 
   }
 
   const content = await getShopContent()
-  const saved = params.saved === "1"
 
   return (
     <div className="min-h-screen">
@@ -36,7 +36,7 @@ export default async function EditShopPage({ searchParams }: EditShopPageProps) 
                 View Shop Page
               </Link>
             </Button>
-            {saved ? <p className="text-sm text-green-600">Saved. Shop page is updated.</p> : null}
+            <EditStatusMessage error={params.error} saved={params.saved} successMessage="Saved. Shop page is updated." />
           </div>
           <div className="flex gap-2">
             <form action={logoutFromEdit}>
