@@ -14,38 +14,6 @@ export type AboutContent = {
   ctaDescription: string
 }
 
-export const DEFAULT_ABOUT_CONTENT: AboutContent = {
-  heroTitle: "About Thudarum",
-  heroSubtitle: "Crafting timeless elegance for the modern gentleman",
-  storyTitle: "Our Story",
-  storyParagraphs: [
-    'Founded with a vision to redefine modern menswear, Thudarum represents the perfect marriage of traditional craftsmanship and contemporary design. Our name, derived from the Tamil word meaning "continuation," embodies our commitment to carrying forward the legacy of fine tailoring into the modern era.',
-    "Every piece in our collection is meticulously crafted using premium Italian fabrics and constructed by master tailors who have honed their craft over decades. We believe that true luxury lies not in excess, but in the perfect balance of form, function, and timeless style.",
-    "Our double-breasted suits and blazers are designed for the discerning gentleman who appreciates quality, understands elegance, and values garments that will remain relevant for years to come.",
-  ],
-  valuesTitle: "Our Values",
-  values: [
-    {
-      title: "Craftsmanship",
-      description:
-        "Every garment is constructed with meticulous attention to detail by skilled artisans who take pride in their work.",
-    },
-    {
-      title: "Quality",
-      description:
-        "We source only the finest materials from renowned Italian mills, ensuring durability and comfort in every piece.",
-    },
-    {
-      title: "Timelessness",
-      description:
-        "Our designs transcend fleeting trends, offering styles that remain elegant and relevant season after season.",
-    },
-  ],
-  ctaTitle: "Experience Thudarum",
-  ctaDescription:
-    "Discover our latest collection of meticulously crafted suits and blazers designed for the modern gentleman.",
-}
-
 const ABOUT_CONTENT_ID = "about"
 
 function getSupabaseConfig() {
@@ -53,7 +21,7 @@ function getSupabaseConfig() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!url || !serviceRoleKey) {
-    return null
+    throw new Error("Supabase is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to Vercel.")
   }
 
   return {
@@ -62,60 +30,58 @@ function getSupabaseConfig() {
   }
 }
 
-function normalizeAboutContent(content: Partial<AboutContent> | null | undefined): AboutContent {
-  return {
-    ...DEFAULT_ABOUT_CONTENT,
-    ...content,
-    storyParagraphs: content?.storyParagraphs?.length
-      ? content.storyParagraphs
-      : DEFAULT_ABOUT_CONTENT.storyParagraphs,
-    values: DEFAULT_ABOUT_CONTENT.values.map((defaultValue, index) => ({
-      ...defaultValue,
-      ...content?.values?.[index],
-    })),
+function parseAboutContent(content: unknown): AboutContent {
+  if (!isRecord(content)) {
+    throw new Error("Supabase about content is missing or invalid.")
   }
+
+  const parsedContent = {
+    heroTitle: getString(content, "heroTitle"),
+    heroSubtitle: getString(content, "heroSubtitle"),
+    storyTitle: getString(content, "storyTitle"),
+    storyParagraphs: getStringArray(content, "storyParagraphs"),
+    valuesTitle: getString(content, "valuesTitle"),
+    values: getValues(content, "values"),
+    ctaTitle: getString(content, "ctaTitle"),
+    ctaDescription: getString(content, "ctaDescription"),
+  }
+
+  if (!parsedContent.storyParagraphs.length) {
+    throw new Error("Supabase about content must include at least one story paragraph.")
+  }
+
+  if (!parsedContent.values.length) {
+    throw new Error("Supabase about content must include at least one value item.")
+  }
+
+  return parsedContent
 }
 
 export async function getAboutContent(): Promise<AboutContent> {
   const config = getSupabaseConfig()
+  const response = await fetch(`${config.url}/rest/v1/site_content?id=eq.${ABOUT_CONTENT_ID}&select=content&limit=1`, {
+    headers: {
+      apikey: config.serviceRoleKey,
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+    },
+    cache: "no-store",
+  })
 
-  if (!config) {
-    return DEFAULT_ABOUT_CONTENT
+  if (!response.ok) {
+    throw new Error(`Failed to load about content from Supabase: ${await response.text()}`)
   }
 
-  try {
-    const response = await fetch(
-      `${config.url}/rest/v1/site_content?id=eq.${ABOUT_CONTENT_ID}&select=content&limit=1`,
-      {
-        headers: {
-          apikey: config.serviceRoleKey,
-          Authorization: `Bearer ${config.serviceRoleKey}`,
-        },
-        cache: "no-store",
-      },
-    )
+  const rows = (await response.json()) as Array<{ content: unknown }>
 
-    if (!response.ok) {
-      console.error("Failed to load about content from Supabase", await response.text())
-      return DEFAULT_ABOUT_CONTENT
-    }
-
-    const rows = (await response.json()) as Array<{ content: Partial<AboutContent> }>
-
-    return normalizeAboutContent(rows[0]?.content)
-  } catch (error) {
-    console.error("Failed to load about content", error)
-    return DEFAULT_ABOUT_CONTENT
+  if (!rows[0]) {
+    throw new Error('About content row was not found in Supabase. Run supabase/about-content.sql to seed id "about".')
   }
+
+  return parseAboutContent(rows[0].content)
 }
 
 export async function saveAboutContent(content: AboutContent) {
   const config = getSupabaseConfig()
-
-  if (!config) {
-    throw new Error("Supabase is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to Vercel.")
-  }
-
   const response = await fetch(`${config.url}/rest/v1/site_content`, {
     method: "POST",
     headers: {
@@ -126,7 +92,7 @@ export async function saveAboutContent(content: AboutContent) {
     },
     body: JSON.stringify({
       id: ABOUT_CONTENT_ID,
-      content,
+      content: parseAboutContent(content),
       updated_at: new Date().toISOString(),
     }),
   })
@@ -134,4 +100,47 @@ export async function saveAboutContent(content: AboutContent) {
   if (!response.ok) {
     throw new Error(`Failed to save about content: ${await response.text()}`)
   }
+}
+
+function getString(content: Record<string, unknown>, key: string) {
+  const value = content[key]
+
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`Supabase about content field "${key}" is required.`)
+  }
+
+  return value
+}
+
+function getStringArray(content: Record<string, unknown>, key: string) {
+  const value = content[key]
+
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !item.trim())) {
+    throw new Error(`Supabase about content field "${key}" must be a non-empty string array.`)
+  }
+
+  return value
+}
+
+function getValues(content: Record<string, unknown>, key: string) {
+  const value = content[key]
+
+  if (!Array.isArray(value)) {
+    throw new Error(`Supabase about content field "${key}" must be an array.`)
+  }
+
+  return value.map((item, index) => {
+    if (!isRecord(item)) {
+      throw new Error(`Supabase about content value item ${index + 1} is invalid.`)
+    }
+
+    return {
+      title: getString(item, "title"),
+      description: getString(item, "description"),
+    }
+  })
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
