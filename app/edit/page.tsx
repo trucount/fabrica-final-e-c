@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { ArrowLeft, LogOut } from "lucide-react"
 import { CollectionsCarousel } from "@/components/collections-carousel"
 import { Header } from "@/components/header"
@@ -159,27 +160,88 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
           <ProductGridCustom products={bestSellerProducts} />
         </section>
 
+        <input type="hidden" name="about.heroTitle" defaultValue={aboutContent.heroTitle} />
+        <input type="hidden" name="about.heroSubtitle" defaultValue={aboutContent.heroSubtitle} />
+
         <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
-          <div className="rounded-lg border p-4 sm:p-6 mb-8">
-            <h2 className="font-serif text-2xl font-semibold mb-4">Shared About Sections</h2>
-            <p className="text-sm text-muted-foreground">Changes here also update the About page.</p>
+          <div className="mb-8 rounded-lg border border-dashed p-4 sm:p-6">
+            <h2 className="font-serif text-2xl font-semibold mb-2">Shared About Sections</h2>
+            <p className="text-sm text-muted-foreground">
+              This editor mirrors the About section shown on the home page. Changes here also update the About page.
+            </p>
           </div>
-          <div className="space-y-6">
-            <Input name="about.heroTitle" defaultValue={aboutContent.heroTitle} aria-label="About hero title" className="h-auto border-dashed font-serif text-3xl font-semibold" />
-            <Textarea name="about.heroSubtitle" defaultValue={aboutContent.heroSubtitle} aria-label="About hero subtitle" className="border-dashed" />
-            <Input name="about.storyTitle" defaultValue={aboutContent.storyTitle} aria-label="About story title" className="h-auto border-dashed font-serif text-3xl font-semibold" />
-            {aboutContent.storyParagraphs.map((paragraph, index) => (
-              <Textarea key={index} name="about.storyParagraphs" defaultValue={paragraph} aria-label={`About story paragraph ${index + 1}`} className="min-h-28 border-dashed" />
-            ))}
-            <Input name="about.valuesTitle" defaultValue={aboutContent.valuesTitle} aria-label="About values title" className="h-auto border-dashed font-serif text-3xl font-semibold" />
-            {aboutContent.values.map((value, index) => (
-              <div key={index} className="grid gap-3 sm:grid-cols-2">
-                <Input name={`about.values.${index}.title`} defaultValue={value.title} aria-label={`About value ${index + 1} title`} className="border-dashed" />
-                <Textarea name={`about.values.${index}.description`} defaultValue={value.description} aria-label={`About value ${index + 1} description`} className="border-dashed" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            <div>
+              <Input
+                name="about.storyTitle"
+                defaultValue={aboutContent.storyTitle}
+                aria-label="About story title"
+                className="h-auto border-dashed font-serif text-3xl sm:text-4xl md:text-5xl font-semibold mb-6"
+              />
+              <div className="space-y-4">
+                {aboutContent.storyParagraphs.map((paragraph, index) => (
+                  <Textarea
+                    key={index}
+                    name="about.storyParagraphs"
+                    defaultValue={paragraph}
+                    aria-label={`About story paragraph ${index + 1}`}
+                    className="min-h-24 resize-y border-dashed text-muted-foreground leading-relaxed"
+                  />
+                ))}
               </div>
-            ))}
-            <Input name="about.ctaTitle" defaultValue={aboutContent.ctaTitle} aria-label="About CTA title" className="h-auto border-dashed font-serif text-3xl font-semibold" />
-            <Textarea name="about.ctaDescription" defaultValue={aboutContent.ctaDescription} aria-label="About CTA description" className="border-dashed" />
+            </div>
+            <div className="relative aspect-[4/5] bg-secondary overflow-hidden rounded-lg">
+              <Image src="/thudarum-taupe-suit-detail.jpg" alt="Thudarum craftsmanship" fill className="object-cover" />
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-secondary py-12 sm:py-16 md:py-24">
+          <div className="container mx-auto px-4 sm:px-6">
+            <Input
+              name="about.valuesTitle"
+              defaultValue={aboutContent.valuesTitle}
+              aria-label="About values title"
+              className="mx-auto mb-12 h-auto max-w-2xl border-dashed bg-background/75 text-center font-serif text-3xl sm:text-4xl md:text-5xl font-semibold"
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
+              {aboutContent.values.map((value, index) => (
+                <div key={index} className="text-center space-y-4">
+                  <Input
+                    name={`about.values.${index}.title`}
+                    defaultValue={value.title}
+                    aria-label={`About value ${index + 1} title`}
+                    className="h-auto border-dashed bg-background/75 text-center font-serif text-xl sm:text-2xl font-semibold"
+                  />
+                  <Textarea
+                    name={`about.values.${index}.description`}
+                    defaultValue={value.description}
+                    aria-label={`About value ${index + 1} description`}
+                    className="min-h-28 resize-y border-dashed bg-background/75 text-center text-sm text-muted-foreground leading-relaxed"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
+          <div className="max-w-3xl mx-auto text-center">
+            <Input
+              name="about.ctaTitle"
+              defaultValue={aboutContent.ctaTitle}
+              aria-label="About CTA title"
+              className="mx-auto mb-6 h-auto border-dashed text-center font-serif text-3xl sm:text-4xl md:text-5xl font-semibold"
+            />
+            <Textarea
+              name="about.ctaDescription"
+              defaultValue={aboutContent.ctaDescription}
+              aria-label="About CTA description"
+              className="mb-8 min-h-24 resize-y border-dashed text-center text-base sm:text-lg text-muted-foreground"
+            />
+            <Button asChild size="lg" className="h-12 px-8">
+              <Link href="/edit/collections">Explore Collection</Link>
+            </Button>
           </div>
         </section>
 
