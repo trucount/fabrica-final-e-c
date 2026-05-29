@@ -7,10 +7,15 @@ import { AboutSections } from "@/components/about-sections"
 import { getAboutContent } from "@/lib/about-content"
 import { getHomeContent } from "@/lib/home-content"
 import { getSiteContent } from "@/lib/site-content"
-import { COLLECTIONS } from "@/lib/collections-data"
+import { getCollections } from "@/lib/collections-data"
 
 export default async function Home() {
-  const [aboutContent, homeContent, siteContent] = await Promise.all([getAboutContent(), getHomeContent(), getSiteContent()])
+  const [aboutContent, homeContent, siteContent, collections] = await Promise.all([
+    getAboutContent(),
+    getHomeContent(),
+    getSiteContent(),
+    getCollections(),
+  ])
 
   return (
     <div className="min-h-screen">
@@ -51,11 +56,11 @@ export default async function Home() {
             <Link href="/collections">View All</Link>
           </Button>
         </div>
-        <CollectionsCarousel collections={COLLECTIONS} />
+        <CollectionsCarousel collections={collections} />
       </section>
 
       {/* New Arrivals */}
-      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
+      <section id="new-arrivals" className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 scroll-mt-20">
         <div className="flex items-center justify-between mb-8 sm:mb-12">
           <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold">{homeContent.newArrivalsTitle}</h2>
           <Button variant="ghost" asChild className="text-sm sm:text-base">
@@ -95,7 +100,7 @@ export default async function Home() {
       </section>
 
       {/* Best Sellers */}
-      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
+      <section id="best-sellers" className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 scroll-mt-20">
         <div className="flex items-center justify-between mb-8 sm:mb-12">
           <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold">{homeContent.bestSellersTitle}</h2>
           <Button variant="ghost" asChild className="text-sm sm:text-base">
@@ -155,10 +160,10 @@ export default async function Home() {
                   <Link href="/collections">Collections</Link>
                 </li>
                 <li>
-                  <Link href="/shop?section=new-arrivals">{homeContent.newArrivalsTitle}</Link>
+                  <Link href="/#new-arrivals">{homeContent.newArrivalsTitle}</Link>
                 </li>
                 <li>
-                  <Link href="/shop?section=best-sellers">{homeContent.bestSellersTitle}</Link>
+                  <Link href="/#best-sellers">{homeContent.bestSellersTitle}</Link>
                 </li>
               </ul>
             </div>

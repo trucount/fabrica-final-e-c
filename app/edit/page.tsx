@@ -12,7 +12,7 @@ import { EditSaveButton } from "@/components/edit-save-button"
 import { getAboutContent } from "@/lib/about-content"
 import { getHomeContent } from "@/lib/home-content"
 import { getSiteContent } from "@/lib/site-content"
-import { COLLECTIONS } from "@/lib/collections-data"
+import { getCollections } from "@/lib/collections-data"
 import { EDIT_SESSION_COOKIE } from "./constants"
 import { loginToHomeEdit, logoutFromEdit, saveEditedHomeContent } from "./actions"
 
@@ -29,10 +29,11 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
     return <EditLoginPage error={params.error === "1" || params.error === "auth"} />
   }
 
-  const [aboutContent, homeContent, siteContent] = await Promise.all([
+  const [aboutContent, homeContent, siteContent, collections] = await Promise.all([
     getAboutContent(),
     getHomeContent(),
     getSiteContent(),
+    getCollections(),
   ])
   const saved = params.saved === "1"
 
@@ -129,10 +130,10 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
               <Link href="/edit/collections">View All</Link>
             </Button>
           </div>
-          <CollectionsCarousel collections={COLLECTIONS} />
+          <CollectionsCarousel collections={collections} />
         </section>
 
-        <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
+        <section id="new-arrivals" className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 scroll-mt-20">
           <div className="flex items-center justify-between mb-8 sm:mb-12">
             <Input
               name="newArrivalsTitle"
@@ -147,7 +148,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
           <ProductGridCustom products={newArrivalProducts} />
         </section>
 
-        <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
+        <section id="best-sellers" className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 scroll-mt-20">
           <div className="flex items-center justify-between mb-8 sm:mb-12">
             <Input
               name="bestSellersTitle"
@@ -269,10 +270,10 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
                     <Link href="/edit/collections">Collections</Link>
                   </li>
                   <li>
-                    <Link href="/edit">{homeContent.newArrivalsTitle}</Link>
+                    <Link href="/edit#new-arrivals">{homeContent.newArrivalsTitle}</Link>
                   </li>
                   <li>
-                    <Link href="/edit">{homeContent.bestSellersTitle}</Link>
+                    <Link href="/edit#best-sellers">{homeContent.bestSellersTitle}</Link>
                   </li>
                 </ul>
               </div>
