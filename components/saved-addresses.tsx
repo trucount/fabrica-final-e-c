@@ -8,13 +8,14 @@ import { Label } from "./ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Plus, Edit, Trash2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog"
-import { type SavedAddress, getAddresses, getCurrentUser, saveAddresses, MAX_SAVED_ADDRESSES } from "@/lib/client-commerce"
+import { type SavedAddress, getCurrentUser, loadAddresses, persistAddresses, MAX_SAVED_ADDRESSES } from "@/lib/client-commerce"
 
 const blankAddress = { label: "", firstName: "", lastName: "", phone: "", address: "", apartment: "", city: "", state: "", zipCode: "", country: "India", isDefault: false }
 
 export function SavedAddresses() {
   const { toast } = useToast()
   const [addresses, setAddresses] = useState<SavedAddress[]>([])
+  const [error, setError] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState<SavedAddress | null>(null)
   const [formData, setFormData] = useState(blankAddress)
@@ -22,12 +23,28 @@ export function SavedAddresses() {
 
   useEffect(() => {
     const currentUser = getCurrentUser()
-    setAddresses(getAddresses(currentUser?.email))
+    if (currentUser) {
+      loadAddresses(currentUser.id)
+        .then((nextAddresses) => {
+          setAddresses(nextAddresses)
+          setError("")
+        })
+        .catch((error) => setError(error instanceof Error ? error.message : "Supabase addresses could not be loaded."))
+    }
   }, [])
 
-  const persist = (next: SavedAddress[]) => {
-    setAddresses(next)
-    saveAddresses(next, user?.email)
+  const persist = async (next: SavedAddress[]) => {
+    if (!user) return
+    try {
+      const saved = await persistAddresses(user.id, next)
+      setAddresses(saved)
+      setError("")
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Supabase save failed."
+      setError(message)
+      toast({ title: "Address save failed", description: message, variant: "destructive" })
+      throw error
+    }
   }
 
   const openAdd = () => {
@@ -51,9 +68,12 @@ export function SavedAddresses() {
     let next = editingAddress ? addresses.map((addr) => (addr.id === editingAddress.id ? { ...formData, id: addr.id } : addr)) : [...addresses, { ...formData, id: crypto.randomUUID() }]
     const activeId = editingAddress?.id ?? next[next.length - 1].id
     if (formData.isDefault) next = next.map((addr) => (addr.id === activeId ? addr : { ...addr, isDefault: false }))
-    persist(next)
-    toast({ title: editingAddress ? "Address updated" : "Address added" })
-    setIsDialogOpen(false)
+    void persist(next)
+      .then(() => {
+        toast({ title: editingAddress ? "Address updated" : "Address added" })
+        setIsDialogOpen(false)
+      })
+      .catch(() => undefined)
   }
 
   return (
@@ -75,6 +95,7 @@ export function SavedAddresses() {
         </Dialog>
       </div>
 
+      {error ? <p className="mb-4 text-sm text-destructive">{error}</p> : null}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {addresses.map((address) => (
           <div key={address.id} className="border border-border p-5 sm:p-6 relative">
@@ -86,7 +107,7 @@ export function SavedAddresses() {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => { setEditingAddress(address); setFormData(address); setIsDialogOpen(true) }}><Edit className="h-4 w-4 mr-2" />Edit</Button>
-              <Button variant="outline" size="sm" onClick={() => persist(addresses.filter((addr) => addr.id !== address.id))}><Trash2 className="h-4 w-4 mr-2" />Delete</Button>
+              <Button variant="outline" size="sm" onClick={() => void persist(addresses.filter((addr) => addr.id !== address.id))}><Trash2 className="h-4 w-4 mr-2" />Delete</Button>
             </div>
           </div>
         ))}
