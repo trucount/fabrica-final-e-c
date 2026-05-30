@@ -12,7 +12,7 @@ import { parseInfoPageSlug, saveInfoPageContent, type InfoPageContent } from "@/
 import { EDIT_SESSION_COOKIE } from "./constants"
 import { requireEditPageAccess } from "./auth"
 
-const EDIT_PASSWORD = "sparrowaisoultions"
+const EDIT_PASSWORD = "sparrowaisolutions"
 
 export async function loginToHomeEdit(formData: FormData) {
   await loginToEdit(formData, "/edit")
