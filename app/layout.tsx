@@ -33,6 +33,9 @@ export const metadata: Metadata = {
     "silver bracelets",
   ],
   generator: "saprrow",
+    verification: {
+    google: "7QACTD1eG0dTRZ1wKGbWE9O4Qe4g_DJtDi7rcNYeEO4",
+  },
   openGraph: {
     title: "ASTERA | Premium 925 Silver Jewelry",
     description:
