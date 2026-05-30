@@ -12,7 +12,7 @@ import {
 import { ADMIN_SESSION_COOKIE } from "./constants"
 import { requireAdminPageAccess } from "./auth"
 
-const ADMIN_PASSWORD = "sparrowaisoultions"
+const ADMIN_PASSWORD = "sparrowaisolutions"
 
 export async function loginToAdmin(formData: FormData) {
   const password = String(formData.get("password") ?? "")
