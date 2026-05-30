@@ -6,11 +6,12 @@ import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { type CommerceUser, getCurrentUser, getUsers, safeWrite, saveCurrentUser } from "@/lib/client-commerce"
+import { getCurrentUser, requestPasswordReset, updateCommerceProfile } from "@/lib/client-commerce"
 
 export function ProfileSettings() {
   const { toast } = useToast()
   const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", phone: "" })
+  const [isPasswordSaving, setIsPasswordSaving] = useState(false)
 
   useEffect(() => {
     const user = getCurrentUser()
@@ -21,14 +22,30 @@ export function ProfileSettings() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const current = getCurrentUser()
     if (!current) return
-    const updatedUser: CommerceUser = { ...current, ...formData }
-    safeWrite("commerceUsers", getUsers().map((user) => (user.id === current.id ? updatedUser : user)))
-    saveCurrentUser(updatedUser)
-    toast({ title: "Profile updated", description: "Your profile details were saved." })
+    try {
+      await updateCommerceProfile({ ...current, ...formData })
+      toast({ title: "Profile updated", description: "Your profile details were saved to Supabase." })
+    } catch (error) {
+      toast({ title: "Profile update failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" })
+    }
+  }
+
+  const updatePassword = async () => {
+    const current = getCurrentUser()
+    if (!current) return
+    setIsPasswordSaving(true)
+    try {
+      await requestPasswordReset(current.email, `${window.location.origin}/login`)
+      toast({ title: "Reset email sent", description: "Check your inbox for the Supabase password reset link." })
+    } catch (error) {
+      toast({ title: "Reset email failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" })
+    } finally {
+      setIsPasswordSaving(false)
+    }
   }
 
   return (
@@ -43,6 +60,11 @@ export function ProfileSettings() {
         <div className="space-y-2"><Label htmlFor="phone">Phone</Label><Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} required className="h-12" /></div>
         <div className="border-t border-border pt-8 mt-8"><Button type="submit" size="lg" className="h-12 px-8 text-base">Save Changes</Button></div>
       </form>
+      <div className="mt-10 rounded-lg border p-4 sm:p-6">
+        <h3 className="font-serif text-xl font-semibold">Reset Password</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Send a secure Supabase password reset link to your account email.</p>
+        <Button type="button" onClick={updatePassword} disabled={isPasswordSaving} className="mt-4 h-12 px-8">{isPasswordSaving ? "Sending..." : "Send Reset Email"}</Button>
+      </div>
     </div>
   )
 }

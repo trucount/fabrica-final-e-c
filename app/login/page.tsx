@@ -8,7 +8,7 @@ import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { getUsers, saveCurrentUser } from "@/lib/client-commerce"
+import { loginWithSupabase, requestPasswordReset } from "@/lib/client-commerce"
 import { useToast } from "@/hooks/use-toast"
 
 function LoginContent() {
@@ -17,20 +17,38 @@ function LoginContent() {
   const { toast } = useToast()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
   const next = searchParams.get("next") || "/profile"
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault()
-    const user = getUsers().find((item) => item.email.toLowerCase() === email.toLowerCase() && item.password === password)
+    setIsLoading(true)
+    try {
+      await loginWithSupabase(email, password)
+      window.dispatchEvent(new Event("commerce-auth-changed"))
+      router.push(next)
+    } catch (error) {
+      toast({ title: "Login failed", description: error instanceof Error ? error.message : "Please check your email and password.", variant: "destructive" })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-    if (!user) {
-      toast({ title: "Login failed", description: "Please check your email and password.", variant: "destructive" })
+  const forgotPassword = async () => {
+    if (!email) {
+      toast({ title: "Enter your email", description: "Add your email above so we can send the reset link.", variant: "destructive" })
       return
     }
-
-    saveCurrentUser(user)
-    window.dispatchEvent(new Event("commerce-auth-changed"))
-    router.push(next)
+    setIsResetting(true)
+    try {
+      await requestPasswordReset(email, `${window.location.origin}/login`)
+      toast({ title: "Reset email sent", description: "Check your inbox for the Supabase password reset link." })
+    } catch (error) {
+      toast({ title: "Reset failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" })
+    } finally {
+      setIsResetting(false)
+    }
   }
 
   return (
@@ -48,7 +66,8 @@ function LoginContent() {
             <Label>Password</Label>
             <Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
           </div>
-          <Button type="submit" className="w-full">Login</Button>
+          <Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? "Logging in..." : "Login"}</Button>
+          <Button type="button" variant="link" className="w-full" disabled={isResetting} onClick={forgotPassword}>{isResetting ? "Sending reset link..." : "Forgot password?"}</Button>
           <p className="text-center text-sm text-muted-foreground">
             New here? <Link className="font-medium text-foreground underline" href={`/signup?next=${encodeURIComponent(next)}`}>Create an account</Link>
           </p>
