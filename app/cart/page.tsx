@@ -7,41 +7,42 @@ import { Button } from "@/components/ui/button"
 import { useCart } from "@/components/cart-provider"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Minus, Plus, X, Tag, ArrowLeft } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { formatCurrency } from "@/lib/currency"
+import { calculateTotals, getCurrentUser, getPolicies, type Coupon } from "@/lib/client-commerce"
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, total } = useCart()
+  const router = useRouter()
   const [couponCode, setCouponCode] = useState("")
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
+  const [policies, setPolicies] = useState(getPolicies())
   const [isApplying, setIsApplying] = useState(false)
   const { toast } = useToast()
 
-  const coupons = {
-    WELCOME10: 10,
-    SAVE20: 20,
-    LUXURY15: 15,
-  }
+  useEffect(() => {
+    setPolicies(getPolicies())
+    const savedCoupon = localStorage.getItem("appliedCouponCode")
+    if (savedCoupon) {
+      setAppliedCoupon(getPolicies().coupons.find((coupon) => coupon.active && coupon.code === savedCoupon) ?? null)
+    }
+  }, [])
+
 
   const handleApplyCoupon = () => {
     setIsApplying(true)
     setTimeout(() => {
-      const discount = coupons[couponCode.toUpperCase() as keyof typeof coupons]
-      if (discount) {
-        setAppliedCoupon({ code: couponCode.toUpperCase(), discount })
-        toast({
-          title: "Coupon applied!",
-          description: `You saved ${discount}% on your order`,
-        })
+      const coupon = getPolicies().coupons.find((item) => item.active && item.code.toUpperCase() === couponCode.toUpperCase())
+      if (coupon) {
+        setAppliedCoupon(coupon)
+        localStorage.setItem("appliedCouponCode", coupon.code)
+        toast({ title: "Coupon applied!", description: `${coupon.code} was applied to your order.` })
       } else {
-        toast({
-          title: "Invalid coupon",
-          description: "Please check your coupon code and try again",
-          variant: "destructive",
-        })
+        toast({ title: "Invalid coupon", description: "Please check your coupon code and try again", variant: "destructive" })
       }
       setIsApplying(false)
     }, 500)
@@ -49,11 +50,20 @@ export default function CartPage() {
 
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null)
+    localStorage.removeItem("appliedCouponCode")
     setCouponCode("")
   }
 
-  const discountAmount = appliedCoupon ? (total * appliedCoupon.discount) / 100 : 0
-  const subtotalAfterDiscount = total - discountAmount
+  const totals = calculateTotals(total, policies, appliedCoupon?.code)
+  const subtotalAfterDiscount = total - totals.discount
+
+  const proceedToCheckout = () => {
+    if (!getCurrentUser()) {
+      router.push("/login?next=/checkout")
+      return
+    }
+    router.push("/checkout")
+  }
 
   if (items.length === 0) {
     return (
@@ -159,7 +169,7 @@ export default function CartPage() {
                     <div className="flex items-center gap-2">
                       <Tag className="h-4 w-4 text-green-600" />
                       <span className="text-sm font-medium">{appliedCoupon.code}</span>
-                      <span className="text-xs text-muted-foreground">-{appliedCoupon.discount}%</span>
+                      <span className="text-xs text-muted-foreground">{appliedCoupon.discountType === "percent" ? `${appliedCoupon.discountValue}%` : formatCurrency(appliedCoupon.discountValue)}</span>
                     </div>
                     <button
                       onClick={handleRemoveCoupon}
@@ -188,7 +198,7 @@ export default function CartPage() {
                     </Button>
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground mt-2">Try: WELCOME10, SAVE20, LUXURY15</p>
+                <p className="text-xs text-muted-foreground mt-2">Try: {policies.coupons.map((coupon) => coupon.code).join(", ") || "No active coupons"}</p>
               </div>
 
               <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
@@ -198,17 +208,17 @@ export default function CartPage() {
                 </div>
                 {appliedCoupon && (
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>Discount ({appliedCoupon.discount}%)</span>
-                    <span className="font-medium">-{formatCurrency(discountAmount)}</span>
+                    <span>Discount ({appliedCoupon.code})</span>
+                    <span className="font-medium">-{formatCurrency(totals.discount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="font-medium">{subtotalAfterDiscount >= 200 ? "Free" : formatCurrency(15)}</span>
+                  <span className="font-medium">{totals.shipping === 0 ? "Free" : formatCurrency(totals.shipping)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax</span>
-                  <span className="font-medium">{formatCurrency(subtotalAfterDiscount * 0.08)}</span>
+                  <span className="font-medium">{formatCurrency(totals.tax)}</span>
                 </div>
               </div>
 
@@ -216,24 +226,18 @@ export default function CartPage() {
                 <div className="flex justify-between font-serif text-base sm:text-lg font-semibold">
                   <span>Total</span>
                   <span>
-                    {formatCurrency(
-                      subtotalAfterDiscount +
-                        (subtotalAfterDiscount >= 200 ? 0 : 15) +
-                        subtotalAfterDiscount * 0.08,
-                    )}
+                    {formatCurrency(totals.total)}
                   </span>
                 </div>
               </div>
 
-              {subtotalAfterDiscount < 200 && (
+              {subtotalAfterDiscount < policies.freeShippingThreshold && (
                 <p className="text-xs text-muted-foreground mb-4 sm:mb-6">
-                  Add {formatCurrency(200 - subtotalAfterDiscount)} more for free shipping
+                  Add {formatCurrency(policies.freeShippingThreshold - subtotalAfterDiscount)} more for free shipping
                 </p>
               )}
 
-              <Button asChild size="lg" className="w-full h-11 sm:h-12 text-sm sm:text-base mb-3">
-                <Link href="/checkout">Proceed to Checkout</Link>
-              </Button>
+              <Button type="button" onClick={proceedToCheckout} size="lg" className="w-full h-11 sm:h-12 text-sm sm:text-base mb-3">Proceed to Checkout</Button>
 
               <Button
                 asChild

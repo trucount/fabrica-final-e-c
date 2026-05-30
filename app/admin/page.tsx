@@ -22,6 +22,7 @@ import {
   updateAdminProduct,
 } from "./actions"
 import { hasAdminPageAccess } from "./auth"
+import { AdminOrdersPanel, AdminPoliciesPanel } from "@/components/admin-policies-orders"
 
 type AdminPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
@@ -75,12 +76,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
 
         <Tabs defaultValue={defaultTab} className="gap-6">
-          <TabsList className="grid h-auto w-full grid-cols-1 gap-1 sm:grid-cols-3 lg:inline-grid lg:w-auto">
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-4 lg:inline-grid lg:w-auto">
             <TabsTrigger value="collections">Collections</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="orders" disabled>
-              Orders later
-            </TabsTrigger>
+            <TabsTrigger value="policies">Policies</TabsTrigger>
+            <TabsTrigger value="orders">Orders</TabsTrigger>
           </TabsList>
 
           <TabsContent value="collections" className="space-y-8">
@@ -106,6 +106,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 </TabsContent>
               ))}
             </Tabs>
+          </TabsContent>
+
+          <TabsContent value="policies" className="space-y-8">
+            <AdminPoliciesPanel />
+          </TabsContent>
+
+          <TabsContent value="orders" className="space-y-8">
+            <AdminOrdersPanel />
           </TabsContent>
         </Tabs>
       </main>

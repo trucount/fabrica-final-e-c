@@ -5,15 +5,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProfileSettings } from "@/components/profile-settings"
 import { OrderHistory } from "@/components/order-history"
 import { SavedAddresses } from "@/components/saved-addresses"
-import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { getCurrentUser, saveCurrentUser } from "@/lib/client-commerce"
 
 function ProfileContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const [isReady, setIsReady] = useState(false)
   const defaultTab = searchParams.get("tab") || "profile"
+
+  useEffect(() => {
+    if (!getCurrentUser()) {
+      router.replace("/login?next=/profile")
+      return
+    }
+    setIsReady(true)
+  }, [router])
+
+  if (!isReady) {
+    return <div className="min-h-screen"><Header /><main className="container mx-auto px-4 py-16">Checking account...</main></div>
+  }
 
   return (
     <div className="min-h-screen">
@@ -26,7 +41,10 @@ function ProfileContent() {
           </Link>
         </Button>
 
-        <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold mb-8 sm:mb-10">My Account</h1>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold">My Account</h1>
+          <Button variant="outline" onClick={() => { saveCurrentUser(null); router.push("/login") }}>Logout</Button>
+        </div>
 
         <Tabs defaultValue={defaultTab} className="space-y-8 sm:space-y-10">
           <TabsList className="grid w-full grid-cols-3 h-12 sm:h-14">
