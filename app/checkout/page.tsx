@@ -10,13 +10,14 @@ import { ArrowLeft } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { formatCurrency } from "@/lib/currency"
-import { calculateTotals, getCurrentUser, getPolicies } from "@/lib/client-commerce"
+import { calculateTotals, emptyPolicies, getCurrentUser, loadPolicies } from "@/lib/client-commerce"
 
 export default function CheckoutPage() {
   const { items, total } = useCart()
   const router = useRouter()
   const [ready, setReady] = useState(false)
-  const policies = getPolicies()
+  const [policies, setPolicies] = useState(emptyPolicies)
+  const [policiesError, setPoliciesError] = useState("")
   const couponCode = typeof window !== "undefined" ? localStorage.getItem("appliedCouponCode") ?? undefined : undefined
   const totals = calculateTotals(total, policies, couponCode)
 
@@ -25,10 +26,22 @@ export default function CheckoutPage() {
       router.replace("/login?next=/checkout")
       return
     }
-    setReady(true)
+
+    loadPolicies()
+      .then((nextPolicies) => {
+        setPolicies(nextPolicies)
+        setPoliciesError("")
+        setReady(true)
+      })
+      .catch((error) => {
+        setPoliciesError(error instanceof Error ? error.message : "Order policies could not be loaded.")
+        setReady(true)
+      })
   }, [router])
 
-  if (!ready) return <div className="min-h-screen"><Header /><main className="container mx-auto px-4 py-16">Checking account...</main></div>
+  if (!ready) return <div className="min-h-screen"><Header /><main className="container mx-auto px-4 py-16">Loading checkout...</main></div>
+
+  if (policiesError) return <div className="min-h-screen"><Header /><main className="container mx-auto px-4 py-16"><h1 className="font-serif text-4xl font-semibold">Checkout unavailable</h1><p className="mt-3 text-sm text-destructive">{policiesError}</p><Button asChild className="mt-6"><Link href="/cart">Back to Cart</Link></Button></main></div>
 
   if (items.length === 0) {
     return (

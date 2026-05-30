@@ -6,7 +6,7 @@ export async function POST(request: Request) {
 
   if (!keyId || !keySecret) {
     return NextResponse.json(
-      { error: "Razorpay is not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Vercel." },
+      { error: "Online payment is temporarily unavailable. Please choose Cash on Delivery or try again later." },
       { status: 500 },
     )
   }

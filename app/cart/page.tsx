@@ -13,30 +13,39 @@ import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { formatCurrency } from "@/lib/currency"
-import { calculateTotals, getCurrentUser, getPolicies, type Coupon } from "@/lib/client-commerce"
+import { calculateTotals, emptyPolicies, getCurrentUser, loadPolicies, type Coupon } from "@/lib/client-commerce"
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, total } = useCart()
   const router = useRouter()
   const [couponCode, setCouponCode] = useState("")
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
-  const [policies, setPolicies] = useState(getPolicies())
+  const [policies, setPolicies] = useState(emptyPolicies)
+  const [policiesError, setPoliciesError] = useState("")
+  const [isLoadingPolicies, setIsLoadingPolicies] = useState(true)
   const [isApplying, setIsApplying] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
-    setPolicies(getPolicies())
     const savedCoupon = localStorage.getItem("appliedCouponCode")
-    if (savedCoupon) {
-      setAppliedCoupon(getPolicies().coupons.find((coupon) => coupon.active && coupon.code === savedCoupon) ?? null)
-    }
+
+    loadPolicies()
+      .then((nextPolicies) => {
+        setPolicies(nextPolicies)
+        setPoliciesError("")
+        if (savedCoupon) {
+          setAppliedCoupon(nextPolicies.coupons.find((coupon) => coupon.active && coupon.code === savedCoupon) ?? null)
+        }
+      })
+      .catch((error) => setPoliciesError(error instanceof Error ? error.message : "Order policies could not be loaded."))
+      .finally(() => setIsLoadingPolicies(false))
   }, [])
 
 
   const handleApplyCoupon = () => {
     setIsApplying(true)
     setTimeout(() => {
-      const coupon = getPolicies().coupons.find((item) => item.active && item.code.toUpperCase() === couponCode.toUpperCase())
+      const coupon = policies.coupons.find((item) => item.active && item.code.toUpperCase() === couponCode.toUpperCase())
       if (coupon) {
         setAppliedCoupon(coupon)
         localStorage.setItem("appliedCouponCode", coupon.code)
@@ -58,6 +67,10 @@ export default function CartPage() {
   const subtotalAfterDiscount = total - totals.discount
 
   const proceedToCheckout = () => {
+    if (isLoadingPolicies || policiesError) {
+      toast({ title: "Checkout unavailable", description: policiesError || "Order policies are still loading.", variant: "destructive" })
+      return
+    }
     if (!getCurrentUser()) {
       router.push("/login?next=/checkout")
       return
@@ -191,14 +204,14 @@ export default function CartPage() {
                       type="button"
                       variant="outline"
                       onClick={handleApplyCoupon}
-                      disabled={!couponCode || isApplying}
+                      disabled={!couponCode || isApplying || isLoadingPolicies || Boolean(policiesError)}
                       className="px-4 bg-transparent"
                     >
                       {isApplying ? "..." : "Apply"}
                     </Button>
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground mt-2">Try: {policies.coupons.map((coupon) => coupon.code).join(", ") || "No active coupons"}</p>
+                <p className="text-xs text-muted-foreground mt-2">Enter a coupon code provided by the store.</p>
               </div>
 
               <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
@@ -231,13 +244,15 @@ export default function CartPage() {
                 </div>
               </div>
 
-              {subtotalAfterDiscount < policies.freeShippingThreshold && (
+              {policiesError ? <p className="text-xs text-destructive mb-4 sm:mb-6">{policiesError}</p> : null}
+
+              {!policiesError && subtotalAfterDiscount < policies.freeShippingThreshold && (
                 <p className="text-xs text-muted-foreground mb-4 sm:mb-6">
                   Add {formatCurrency(policies.freeShippingThreshold - subtotalAfterDiscount)} more for free shipping
                 </p>
               )}
 
-              <Button type="button" onClick={proceedToCheckout} size="lg" className="w-full h-11 sm:h-12 text-sm sm:text-base mb-3">Proceed to Checkout</Button>
+              <Button type="button" onClick={proceedToCheckout} size="lg" className="w-full h-11 sm:h-12 text-sm sm:text-base mb-3" disabled={isLoadingPolicies || Boolean(policiesError)}>{isLoadingPolicies ? "Loading summary..." : "Proceed to Checkout"}</Button>
 
               <Button
                 asChild

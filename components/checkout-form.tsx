@@ -15,12 +15,10 @@ import {
   type PaymentMethod,
   type SavedAddress,
   MAX_SAVED_ADDRESSES,
-  consumeOneTimeCoupon,
-  getAddresses,
   getCurrentUser,
-  getOrders,
-  saveAddresses,
-  saveOrders,
+  loadAddresses,
+  persistAddresses,
+  persistOrder,
 } from "@/lib/client-commerce"
 import { Lock } from "lucide-react"
 
@@ -111,16 +109,19 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
   useEffect(() => {
     const currentUser = getCurrentUser()
     if (!currentUser) return
-    const saved = getAddresses(currentUser.email)
-    setAddresses(saved)
-    const defaultAddress = saved.find((address) => address.isDefault) ?? saved[0]
-    if (defaultAddress) {
-      setSelectedAddressId(defaultAddress.id)
-      setFormData(defaultAddress)
-    } else {
-      setFormData({ ...blankAddress, firstName: currentUser.firstName, lastName: currentUser.lastName, phone: currentUser.phone })
+    const applyAddresses = (saved: SavedAddress[]) => {
+      setAddresses(saved)
+      const defaultAddress = saved.find((address) => address.isDefault) ?? saved[0]
+      if (defaultAddress) {
+        setSelectedAddressId(defaultAddress.id)
+        setFormData(defaultAddress)
+      } else {
+        setFormData({ ...blankAddress, firstName: currentUser.firstName, lastName: currentUser.lastName, phone: currentUser.phone })
+      }
     }
-  }, [])
+
+    loadAddresses(currentUser.id).then(applyAddresses).catch((error) => toast({ title: "Could not load addresses", description: error instanceof Error ? error.message : "Please refresh and try again.", variant: "destructive" }))
+  }, [toast])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedAddressId("new")
@@ -133,15 +134,15 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
     if (address) setFormData(address)
   }
 
-  const saveAddressIfNeeded = () => {
+  const saveAddressIfNeeded = async () => {
     if (!user || selectedAddressId !== "new" || !saveNewAddress) return formData as SavedAddress
     if (addresses.length >= MAX_SAVED_ADDRESSES) {
       throw new Error("You already have 3 saved addresses. Delete one from Profile before saving a new address.")
     }
     const newAddress: SavedAddress = { ...formData, id: crypto.randomUUID(), isDefault: !addresses.length }
-    const nextAddresses = [...addresses, newAddress]
-    saveAddresses(nextAddresses, user.email)
-    return newAddress
+    const nextAddresses = await persistAddresses(user.id, [...addresses, newAddress])
+    setAddresses(nextAddresses)
+    return nextAddresses.find((address) => address.id === newAddress.id) ?? newAddress
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -153,7 +154,7 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
 
     setIsProcessing(true)
     try {
-      const shipping = saveAddressIfNeeded()
+      const shipping = await saveAddressIfNeeded()
       let razorpayPaymentId: string | undefined
       let paymentVerified = paymentMethod === "cod"
 
@@ -175,8 +176,7 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
         totals,
       }
 
-      saveOrders([order, ...getOrders()])
-      consumeOneTimeCoupon(totals.coupon?.code)
+      await persistOrder(order, user.id)
       localStorage.removeItem("appliedCouponCode")
       clearCart()
       toast({ title: "Order placed successfully", description: `Order ${order.id} has been placed.` })
@@ -223,7 +223,7 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
           <label className="flex items-center gap-3 rounded-md border p-4"><input type="radio" checked={paymentMethod === "cod"} onChange={() => setPaymentMethod("cod")} /> Cash on Delivery</label>
           <label className="flex items-center gap-3 rounded-md border p-4"><input type="radio" checked={paymentMethod === "razorpay"} onChange={() => setPaymentMethod("razorpay")} /> Online via Razorpay</label>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Vercel to enable Razorpay order creation and signature verification.</p>
+        <p className="mt-2 text-xs text-muted-foreground">Online payment is securely created and verified by the checkout server.</p>
       </div>
 
       <div className="border-t border-border pt-4 sm:pt-6">

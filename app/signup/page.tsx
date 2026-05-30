@@ -8,7 +8,7 @@ import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { type CommerceUser, getUsers, safeWrite, saveCurrentUser } from "@/lib/client-commerce"
+import { signupWithSupabase } from "@/lib/client-commerce"
 import { useToast } from "@/hooks/use-toast"
 
 function SignupContent() {
@@ -17,20 +17,26 @@ function SignupContent() {
   const { toast } = useToast()
   const next = searchParams.get("next") || "/profile"
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault()
-    const users = getUsers()
-    if (users.some((user) => user.email.toLowerCase() === form.email.toLowerCase())) {
-      toast({ title: "Account already exists", description: "Please login with this email.", variant: "destructive" })
-      return
+    setIsSubmitting(true)
+    try {
+      const response = await signupWithSupabase({ ...form, redirectTo: `${window.location.origin}/login` })
+      if (response.emailVerified) {
+        window.dispatchEvent(new Event("commerce-auth-changed"))
+        toast({ title: "Account created", description: "Your account was saved to Supabase." })
+        router.push(next)
+      } else {
+        toast({ title: "Verify your email", description: "Supabase sent a verification email. Please verify your address before logging in." })
+        router.push(`/login?next=${encodeURIComponent(next)}`)
+      }
+    } catch (error) {
+      toast({ title: "Signup failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" })
+    } finally {
+      setIsSubmitting(false)
     }
-
-    const user: CommerceUser = { ...form, id: crypto.randomUUID() }
-    safeWrite("commerceUsers", [...users, user])
-    saveCurrentUser(user)
-    window.dispatchEvent(new Event("commerce-auth-changed"))
-    router.push(next)
   }
 
   return (
@@ -45,7 +51,7 @@ function SignupContent() {
           <div className="space-y-2 sm:col-span-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} required /></div>
           <div className="space-y-2 sm:col-span-2"><Label>Phone number</Label><Input type="tel" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} required /></div>
           <div className="space-y-2 sm:col-span-2"><Label>Password</Label><Input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} required /></div>
-          <div className="sm:col-span-2"><Button type="submit" className="w-full">Sign Up</Button></div>
+          <div className="sm:col-span-2"><Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? "Creating account..." : "Sign Up"}</Button></div>
           <p className="text-center text-sm text-muted-foreground sm:col-span-2">
             Already have an account? <Link className="font-medium text-foreground underline" href={`/login?next=${encodeURIComponent(next)}`}>Login</Link>
           </p>
