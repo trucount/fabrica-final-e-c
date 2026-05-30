@@ -43,12 +43,19 @@ async function loadRazorpay() {
 }
 
 async function runRazorpayPayment(amount: number) {
-  const key = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
-  if (!key) {
-    return `rzp_mock_${Date.now()}`
+  const orderResponse = await fetch("/api/razorpay/order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amount }),
+  })
+
+  if (!orderResponse.ok) {
+    throw new Error((await orderResponse.json()).error ?? "Could not create Razorpay order.")
   }
 
+  const order = (await orderResponse.json()) as { keyId: string; orderId: string; amount: number; currency: string }
   const loaded = await loadRazorpay()
+
   if (!loaded || !window.Razorpay) {
     throw new Error("Razorpay could not load. Please try COD or retry online payment.")
   }
@@ -60,12 +67,27 @@ async function runRazorpayPayment(amount: number) {
       return
     }
     const razorpay = new RazorpayCheckout({
-      key,
-      amount: Math.round(amount * 100),
-      currency: "INR",
+      key: order.keyId,
+      amount: order.amount,
+      currency: order.currency,
+      order_id: order.orderId,
       name: "Order Payment",
       description: "Secure online payment",
-      handler: (response: { razorpay_payment_id?: string }) => resolve(response.razorpay_payment_id ?? `rzp_${Date.now()}`),
+      handler: async (response: { razorpay_order_id?: string; razorpay_payment_id?: string; razorpay_signature?: string }) => {
+        const verifyResponse = await fetch("/api/razorpay/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(response),
+        })
+
+        if (!verifyResponse.ok) {
+          reject(new Error((await verifyResponse.json()).error ?? "Payment verification failed."))
+          return
+        }
+
+        const verification = (await verifyResponse.json()) as { paymentId: string }
+        resolve(verification.paymentId)
+      },
       modal: { ondismiss: () => reject(new Error("Payment was cancelled.")) },
     })
     razorpay.open()
@@ -201,7 +223,7 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
           <label className="flex items-center gap-3 rounded-md border p-4"><input type="radio" checked={paymentMethod === "cod"} onChange={() => setPaymentMethod("cod")} /> Cash on Delivery</label>
           <label className="flex items-center gap-3 rounded-md border p-4"><input type="radio" checked={paymentMethod === "razorpay"} onChange={() => setPaymentMethod("razorpay")} /> Online via Razorpay</label>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">Set NEXT_PUBLIC_RAZORPAY_KEY_ID in Vercel to enable live Razorpay checkout. Without it, the app uses a mock verified payment for testing.</p>
+        <p className="mt-2 text-xs text-muted-foreground">Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Vercel to enable Razorpay order creation and signature verification.</p>
       </div>
 
       <div className="border-t border-border pt-4 sm:pt-6">
