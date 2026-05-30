@@ -11,6 +11,7 @@ import { Minus, Plus, X, Tag, ArrowLeft } from "lucide-react"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
+import { formatCurrency } from "@/lib/currency"
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, total } = useCart()
@@ -137,7 +138,7 @@ export default function CartPage() {
                     </div>
 
                     {/* Price */}
-                    <p className="font-medium text-sm sm:text-base">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="font-medium text-sm sm:text-base">{formatCurrency(item.price * item.quantity)}</p>
                   </div>
                 </div>
               </div>
@@ -193,21 +194,21 @@ export default function CartPage() {
               <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium">${total.toFixed(2)}</span>
+                  <span className="font-medium">{formatCurrency(total)}</span>
                 </div>
                 {appliedCoupon && (
                   <div className="flex justify-between text-sm text-green-600">
                     <span>Discount ({appliedCoupon.discount}%)</span>
-                    <span className="font-medium">-${discountAmount.toFixed(2)}</span>
+                    <span className="font-medium">-{formatCurrency(discountAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="font-medium">{subtotalAfterDiscount >= 200 ? "Free" : "$15.00"}</span>
+                  <span className="font-medium">{subtotalAfterDiscount >= 200 ? "Free" : formatCurrency(15)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax</span>
-                  <span className="font-medium">${(subtotalAfterDiscount * 0.08).toFixed(2)}</span>
+                  <span className="font-medium">{formatCurrency(subtotalAfterDiscount * 0.08)}</span>
                 </div>
               </div>
 
@@ -215,19 +216,18 @@ export default function CartPage() {
                 <div className="flex justify-between font-serif text-base sm:text-lg font-semibold">
                   <span>Total</span>
                   <span>
-                    $
-                    {(
+                    {formatCurrency(
                       subtotalAfterDiscount +
-                      (subtotalAfterDiscount >= 200 ? 0 : 15) +
-                      subtotalAfterDiscount * 0.08
-                    ).toFixed(2)}
+                        (subtotalAfterDiscount >= 200 ? 0 : 15) +
+                        subtotalAfterDiscount * 0.08,
+                    )}
                   </span>
                 </div>
               </div>
 
               {subtotalAfterDiscount < 200 && (
                 <p className="text-xs text-muted-foreground mb-4 sm:mb-6">
-                  Add ${(200 - subtotalAfterDiscount).toFixed(2)} more for free shipping
+                  Add {formatCurrency(200 - subtotalAfterDiscount)} more for free shipping
                 </p>
               )}
 

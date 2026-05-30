@@ -49,70 +49,116 @@ export async function logoutFromAdmin() {
 
 export async function createAdminCollection(formData: FormData) {
   await requireAdminSession()
-  const collection = await getCollectionInputFromForm(formData)
+  let destination = "/admin?saved=created"
 
-  await upsertCollection(collection)
-  revalidateCollectionPages()
-  redirect("/admin?saved=created")
+  try {
+    const collection = await getCollectionInputFromForm(formData)
+    await upsertCollection(collection)
+    revalidateCollectionPages()
+  } catch (error) {
+    destination = getAdminErrorDestination("/admin", error)
+  }
+
+  redirect(destination)
 }
 
 export async function updateAdminCollection(formData: FormData) {
   await requireAdminSession()
-  const originalId = getRequiredText(formData, "originalId")
-  const collection = await getCollectionInputFromForm(formData)
+  let destination = "/admin?saved=updated"
 
-  await upsertCollection(collection)
+  try {
+    const originalId = getRequiredText(formData, "originalId")
+    const collection = await getCollectionInputFromForm(formData)
 
-  if (originalId !== collection.id) {
-    await deleteCollection(originalId)
+    await upsertCollection(collection)
+
+    if (originalId !== collection.id) {
+      await deleteCollection(originalId)
+    }
+
+    revalidateCollectionPages()
+  } catch (error) {
+    destination = getAdminErrorDestination("/admin", error)
   }
 
-  revalidateCollectionPages()
-  redirect("/admin?saved=updated")
+  redirect(destination)
 }
 
 export async function deleteAdminCollection(formData: FormData) {
   await requireAdminSession()
-  const id = getRequiredText(formData, "id")
+  let destination = "/admin?saved=deleted"
 
-  await deleteCollection(id)
-  revalidateCollectionPages()
-  redirect("/admin?saved=deleted")
+  try {
+    const id = getRequiredText(formData, "id")
+    await deleteCollection(id)
+    revalidateCollectionPages()
+  } catch (error) {
+    destination = getAdminErrorDestination("/admin", error)
+  }
+
+  redirect(destination)
 }
 
 export async function createAdminProduct(formData: FormData) {
   await requireAdminSession()
-  const product = await getProductInputFromForm(formData)
+  let baseDestination = "/admin?tab=products&productTab=general"
+  let destination = `${baseDestination}&saved=product-created`
 
-  await assertFeaturedProductLimit(product)
-  await upsertProduct(product)
-  revalidateProductPages()
-  redirect(`/admin?tab=products&productTab=${product.section}&saved=product-created`)
+  try {
+    const section = getProductSectionFromForm(formData)
+    baseDestination = `/admin?tab=products&productTab=${section}`
+    destination = `${baseDestination}&saved=product-created`
+    const product = await getProductInputFromForm(formData)
+    await assertFeaturedProductLimit(product)
+    await upsertProduct(product)
+    revalidateProductPages()
+  } catch (error) {
+    destination = getAdminErrorDestination(baseDestination, error)
+  }
+
+  redirect(destination)
 }
 
 export async function updateAdminProduct(formData: FormData) {
   await requireAdminSession()
-  const originalId = getRequiredText(formData, "originalId")
-  const product = await getProductInputFromForm(formData)
+  let baseDestination = "/admin?tab=products&productTab=general"
+  let destination = `${baseDestination}&saved=product-updated`
 
-  await assertFeaturedProductLimit(product, originalId)
-  await upsertProduct(product)
+  try {
+    const section = getProductSectionFromForm(formData)
+    baseDestination = `/admin?tab=products&productTab=${section}`
+    destination = `${baseDestination}&saved=product-updated`
+    const originalId = getRequiredText(formData, "originalId")
+    const product = await getProductInputFromForm(formData)
 
-  if (originalId !== product.id) {
-    await deleteProduct(originalId)
+    await assertFeaturedProductLimit(product, originalId)
+    await upsertProduct(product)
+
+    if (originalId !== product.id) {
+      await deleteProduct(originalId)
+    }
+
+    revalidateProductPages()
+  } catch (error) {
+    destination = getAdminErrorDestination(baseDestination, error)
   }
 
-  revalidateProductPages()
-  redirect(`/admin?tab=products&productTab=${product.section}&saved=product-updated`)
+  redirect(destination)
 }
 
 export async function deleteAdminProduct(formData: FormData) {
   await requireAdminSession()
-  const id = getRequiredText(formData, "id")
+  let destination = "/admin?tab=products&saved=product-deleted"
 
-  await deleteProduct(id)
-  revalidateProductPages()
-  redirect("/admin?tab=products&saved=product-deleted")
+  try {
+    const id = getRequiredText(formData, "id")
+    await deleteProduct(id)
+    revalidateProductPages()
+  } catch (error) {
+    destination = getAdminErrorDestination("/admin?tab=products", error)
+  }
+
+  redirect(destination)
 }
 
 async function requireAdminSession() {
@@ -187,15 +233,15 @@ async function getProductInputFromForm(formData: FormData): Promise<ProductInput
 }
 
 async function assertFeaturedProductLimit(product: ProductInput, originalId?: string) {
-  if (product.section === "general") {
+  if (product.section === "general" || !product.isActive) {
     return
   }
 
   const sectionProducts = await getProducts({ section: product.section, includeInactive: true })
-  const wouldAddNewProduct = !sectionProducts.some((item) => item.id === (originalId ?? product.id))
+  const activeProducts = sectionProducts.filter((item) => item.isActive && item.id !== (originalId ?? product.id))
 
-  if (wouldAddNewProduct && sectionProducts.length >= FEATURED_PRODUCT_LIMIT) {
-    throw new Error(`Only ${FEATURED_PRODUCT_LIMIT} products are allowed in this home section.`)
+  if (activeProducts.length >= FEATURED_PRODUCT_LIMIT) {
+    throw new Error(`Only ${FEATURED_PRODUCT_LIMIT} active products are allowed in this home section. Deactivate one first.`)
   }
 }
 
@@ -267,4 +313,17 @@ function getTextList(formData: FormData, key: string) {
     .split(/\r?\n|,/)
     .map((item) => item.trim())
     .filter(Boolean)
+}
+
+function getAdminErrorDestination(baseDestination: string, error: unknown) {
+  const separator = baseDestination.includes("?") ? "&" : "?"
+  return `${baseDestination}${separator}error=${encodeURIComponent(getAdminErrorMessage(error))}`
+}
+
+function getAdminErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  return "Something went wrong. Please check the fields and try again."
 }

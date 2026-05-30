@@ -29,8 +29,8 @@ type AdminPageProps = {
 
 const productTabs: Array<{ section: ProductSection; fallbackLabel: string; description: string }> = [
   { section: "general", fallbackLabel: "Normal Product", description: "Products that only appear in Shop / All Products unless filtered by collection." },
-  { section: "new_arrivals", fallbackLabel: "Section 1", description: `Home section products. Maximum ${FEATURED_PRODUCT_LIMIT}.` },
-  { section: "best_sellers", fallbackLabel: "Section 2", description: `Home section products. Maximum ${FEATURED_PRODUCT_LIMIT}.` },
+  { section: "new_arrivals", fallbackLabel: "Section 1", description: `Home section products. Maximum ${FEATURED_PRODUCT_LIMIT} active products.` },
+  { section: "best_sellers", fallbackLabel: "Section 2", description: `Home section products. Maximum ${FEATURED_PRODUCT_LIMIT} active products.` },
 ]
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
@@ -46,6 +46,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     getProducts({ includeInactive: true }),
   ])
   const saved = typeof params.saved === "string" ? params.saved : ""
+  const error = typeof params.error === "string" ? params.error : ""
   const defaultTab = params.tab === "products" ? "products" : "collections"
   const defaultProductTab = productTabs.some((tab) => tab.section === params.productTab) ? String(params.productTab) : "general"
   const sectionLabels: Record<ProductSection, string> = {
@@ -62,7 +63,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <div>
             <h1 className="font-serif text-4xl font-semibold tracking-tight">Admin</h1>
             <p className="text-sm text-muted-foreground">Manage collection cards and Supabase products.</p>
-            {saved ? <p className="mt-2 text-sm text-green-600">Change saved: {saved}.</p> : null}
+            {saved ? <p className="mt-2 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">Change saved: {saved}.</p> : null}
+            {error ? <p className="mt-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
           </div>
           <form action={logoutFromAdmin}>
             <Button type="submit" variant="outline">
@@ -73,7 +75,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
 
         <Tabs defaultValue={defaultTab} className="gap-6">
-          <TabsList className="flex h-auto flex-wrap justify-start">
+          <TabsList className="grid h-auto w-full grid-cols-1 gap-1 sm:grid-cols-3 lg:inline-grid lg:w-auto">
             <TabsTrigger value="collections">Collections</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="orders" disabled>
@@ -87,7 +89,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
           <TabsContent value="products" className="space-y-8">
             <Tabs defaultValue={defaultProductTab} className="gap-6">
-              <TabsList className="flex h-auto flex-wrap justify-start">
+              <TabsList className="grid h-auto w-full grid-cols-1 gap-1 sm:grid-cols-3 lg:inline-grid lg:w-auto">
                 {productTabs.map((tab) => (
                   <TabsTrigger key={tab.section} value={tab.section}>{sectionLabels[tab.section] || tab.fallbackLabel}</TabsTrigger>
                 ))}
@@ -147,10 +149,10 @@ function CollectionsAdmin({ collections }: { collections: CollectionItem[] }) {
         </form>
       </section>
 
-      <section className="rounded-lg border p-4 sm:p-6">
+      <section className="rounded-lg border p-3 sm:p-6">
         <h2 className="font-serif text-2xl font-semibold mb-4">Collections Table</h2>
-        <div className="overflow-x-auto">
-          <Table>
+        <div className="w-full overflow-x-auto rounded-md border md:border-0">
+          <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Preview</TableHead>
@@ -218,23 +220,37 @@ function CollectionsAdmin({ collections }: { collections: CollectionItem[] }) {
 }
 
 function ProductSectionAdmin({ collections, description, label, products, section }: { collections: CollectionItem[]; description: string; label: string; products: ProductDetailData[]; section: ProductSection }) {
+  const activeProductCount = products.filter((product) => product.isActive).length
+  const featuredLimitReached = section !== "general" && activeProductCount >= FEATURED_PRODUCT_LIMIT
+
   return (
     <>
       <section className="rounded-lg border p-4 sm:p-6">
         <div className="mb-4">
           <h2 className="font-serif text-2xl font-semibold">Add {label}</h2>
           <p className="text-sm text-muted-foreground">{description}</p>
+          {section !== "general" ? (
+            <p className="mt-2 text-sm font-medium text-muted-foreground">
+              Active products: {activeProductCount}/{FEATURED_PRODUCT_LIMIT}
+            </p>
+          ) : null}
         </div>
-        <ProductForm collections={collections} formId={`new-product-${section}`} section={section} />
+        {featuredLimitReached ? (
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            This home section already has {FEATURED_PRODUCT_LIMIT} active products. Deactivate or delete one before adding another active product.
+          </div>
+        ) : (
+          <ProductForm collections={collections} formId={`new-product-${section}`} section={section} />
+        )}
       </section>
 
-      <section className="rounded-lg border p-4 sm:p-6">
+      <section className="rounded-lg border p-3 sm:p-6">
         <div className="mb-4">
           <h2 className="font-serif text-2xl font-semibold">{label} Table</h2>
           <p className="text-sm text-muted-foreground">{products.length} product{products.length === 1 ? "" : "s"}</p>
         </div>
-        <div className="overflow-x-auto">
-          <Table>
+        <div className="w-full overflow-x-auto rounded-md border md:border-0">
+          <Table className="min-w-[1180px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Preview</TableHead>
@@ -254,7 +270,7 @@ function ProductSectionAdmin({ collections, description, label, products, sectio
                     </div>
                   </TableCell>
                   <TableCell className="min-w-72 whitespace-normal">
-                    <ProductForm collections={collections} formId={`product-${product.id}`} product={product} section={section} compact />
+                    <ProductForm collections={collections} formId={`product-${product.id}`} product={product} section={section} compact canActivate={section === "general" || product.isActive || activeProductCount < FEATURED_PRODUCT_LIMIT} />
                   </TableCell>
                   <TableCell className="min-w-80 whitespace-normal">
                     <ProductImageFields formId={`product-${product.id}`} product={product} />
@@ -290,7 +306,7 @@ function ProductSectionAdmin({ collections, description, label, products, sectio
   )
 }
 
-function ProductForm({ collections, compact = false, formId, product, section }: { collections: CollectionItem[]; compact?: boolean; formId: string; product?: ProductDetailData; section: ProductSection }) {
+function ProductForm({ canActivate = true, collections, compact = false, formId, product, section }: { canActivate?: boolean; collections: CollectionItem[]; compact?: boolean; formId: string; product?: ProductDetailData; section: ProductSection }) {
   return (
     <form id={formId} action={product ? updateAdminProduct : createAdminProduct} encType="multipart/form-data" className={compact ? "space-y-3" : "grid gap-4 lg:grid-cols-6"}>
       {product ? <input type="hidden" name="originalId" defaultValue={product.id} /> : null}
@@ -312,9 +328,10 @@ function ProductForm({ collections, compact = false, formId, product, section }:
       </Field>
       <Field label="Active" className={compact ? undefined : "lg:col-span-3"}>
         <label className="flex h-10 items-center gap-2 rounded-md border px-3 text-sm">
-          <input name="isActive" type="checkbox" defaultChecked={product?.isActive ?? true} />
+          <input name="isActive" type="checkbox" defaultChecked={product?.isActive ?? true} disabled={!canActivate} />
           Show this product on the site
         </label>
+        {!canActivate ? <p className="mt-1 text-xs text-destructive">Limit reached. Deactivate another active product first.</p> : null}
       </Field>
       {!compact ? (
         <>

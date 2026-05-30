@@ -50,14 +50,15 @@ as $$
 declare
   product_count integer;
 begin
-  if new.section in ('new_arrivals', 'best_sellers') then
+  if new.is_active and new.section in ('new_arrivals', 'best_sellers') then
     select count(*) into product_count
     from public.products
     where section = new.section
+      and is_active = true
       and id <> new.id;
 
     if product_count >= 4 then
-      raise exception 'Only 4 products are allowed in section %.', new.section;
+      raise exception 'Only 4 active products are allowed in section %.', new.section;
     end if;
   end if;
 
