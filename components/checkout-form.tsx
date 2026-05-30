@@ -120,7 +120,7 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
       }
     }
 
-    loadAddresses(currentUser.id).then(applyAddresses).catch((error) => toast({ title: "Could not load addresses", description: error instanceof Error ? error.message : "Please refresh and try again.", variant: "destructive" }))
+    loadAddresses(currentUser.id, currentUser.email).then(applyAddresses).catch((error) => toast({ title: "Could not load addresses", description: error instanceof Error ? error.message : "Please refresh and try again.", variant: "destructive" }))
   }, [toast])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,7 +140,7 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
       throw new Error("You already have 3 saved addresses. Delete one from Profile before saving a new address.")
     }
     const newAddress: SavedAddress = { ...formData, id: crypto.randomUUID(), isDefault: !addresses.length }
-    const nextAddresses = await persistAddresses(user.id, [...addresses, newAddress])
+    const nextAddresses = await persistAddresses(user.id, [...addresses, newAddress], user.email)
     setAddresses(nextAddresses)
     return nextAddresses.find((address) => address.id === newAddress.id) ?? newAddress
   }

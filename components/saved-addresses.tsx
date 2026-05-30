@@ -24,7 +24,7 @@ export function SavedAddresses() {
   useEffect(() => {
     const currentUser = getCurrentUser()
     if (currentUser) {
-      loadAddresses(currentUser.id)
+      loadAddresses(currentUser.id, currentUser.email)
         .then((nextAddresses) => {
           setAddresses(nextAddresses)
           setError("")
@@ -36,7 +36,7 @@ export function SavedAddresses() {
   const persist = async (next: SavedAddress[]) => {
     if (!user) return
     try {
-      const saved = await persistAddresses(user.id, next)
+      const saved = await persistAddresses(user.id, next, user.email)
       setAddresses(saved)
       setError("")
     } catch (error) {

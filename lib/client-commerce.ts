@@ -162,12 +162,14 @@ export async function persistOrderStatus(id: string, status: OrderStatus) {
   await commerceFetch<{ ok: true }>("/api/commerce/orders", { method: "PATCH", body: JSON.stringify({ id, status }) })
 }
 
-export async function loadAddresses(userId: string) {
-  return commerceFetch<SavedAddress[]>(`/api/commerce/addresses?userId=${encodeURIComponent(userId)}`)
+export async function loadAddresses(userId: string, userEmail?: string) {
+  const params = new URLSearchParams({ userId })
+  if (userEmail) params.set("userEmail", userEmail)
+  return commerceFetch<SavedAddress[]>(`/api/commerce/addresses?${params.toString()}`)
 }
 
-export async function persistAddresses(userId: string, addresses: SavedAddress[]) {
-  return commerceFetch<SavedAddress[]>("/api/commerce/addresses", { method: "PUT", body: JSON.stringify({ userId, addresses }) })
+export async function persistAddresses(userId: string, addresses: SavedAddress[], userEmail?: string) {
+  return commerceFetch<SavedAddress[]>("/api/commerce/addresses", { method: "PUT", body: JSON.stringify({ userId, userEmail, addresses }) })
 }
 
 export async function signupWithSupabase(input: Omit<CommerceUser, "id"> & { password: string; redirectTo?: string }) {

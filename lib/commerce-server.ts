@@ -82,7 +82,7 @@ function mapOrder(row: Record<string, unknown>): CustomerOrder {
     userEmail: requireString(row.user_email),
     date: requireString(row.created_at),
     items: items.filter(isRecord).map((item) => ({
-      id: requireString(item.product_id),
+      id: requireString(item.product_id) || requireString(item.product_name),
       name: requireString(item.product_name),
       image: requireString(item.product_image),
       size: requireString(item.size),
@@ -192,19 +192,43 @@ export async function getCommerceOrders(email?: string, id?: string) {
   return rows.map(mapOrder)
 }
 
+async function resolveOrderUserId(email: string, userId?: string) {
+  if (userId) {
+    const response = await rest(`app_users?id=eq.${encodeURIComponent(userId)}&select=id&limit=1`)
+    const rows = (await response.json()) as Array<Record<string, unknown>>
+    if (rows[0]?.id) return requireString(rows[0].id)
+  }
+
+  const user = await getCommerceUserByEmail(email)
+  return user?.id ?? null
+}
+
+async function resolveOrderCouponCode(code?: string) {
+  if (!code) return null
+
+  const response = await rest(`coupons?code=eq.${encodeURIComponent(code)}&select=code&limit=1`)
+  const rows = (await response.json()) as Array<Record<string, unknown>>
+  return rows[0]?.code ? requireString(rows[0].code) : null
+}
+
 export async function createCommerceOrder(order: CustomerOrder, userId?: string) {
+  const [resolvedUserId, resolvedCouponCode] = await Promise.all([
+    resolveOrderUserId(order.userEmail, userId),
+    resolveOrderCouponCode(order.totals.coupon?.code),
+  ])
+
   await rest("orders", {
     method: "POST",
     headers: { "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
     body: JSON.stringify({
       id: order.id,
-      user_id: userId || null,
+      user_id: resolvedUserId,
       user_email: order.userEmail,
       status: order.status,
       payment_method: order.paymentMethod,
       payment_verified: order.paymentVerified,
       razorpay_payment_id: order.razorpayPaymentId ?? null,
-      coupon_code: order.totals.coupon?.code ?? null,
+      coupon_code: resolvedCouponCode,
       shipping_address: order.shipping,
       totals: order.totals,
       created_at: order.date,
@@ -218,7 +242,7 @@ export async function createCommerceOrder(order: CustomerOrder, userId?: string)
       headers: { "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
       body: JSON.stringify(order.items.map((item) => ({
         order_id: order.id,
-        product_id: item.id,
+        product_id: null,
         product_name: item.name,
         product_image: item.image,
         size: item.size,
@@ -254,21 +278,27 @@ export async function getCommerceUserByEmail(email: string) {
   return rows[0] ? mapUser(rows[0]) : null
 }
 
-export async function getCommerceAddresses(userId: string) {
-  const response = await rest(`saved_addresses?user_id=eq.${encodeURIComponent(userId)}&select=*&order=created_at.asc`)
+export async function getCommerceAddresses(userId: string, userEmail?: string) {
+  const resolvedUserId = await resolveOrderUserId(userEmail ?? "", userId)
+  if (!resolvedUserId) throw new Error("Account profile was not found in Supabase. Please log out and log in again.")
+
+  const response = await rest(`saved_addresses?user_id=eq.${encodeURIComponent(resolvedUserId)}&select=*&order=created_at.asc`)
   const rows = (await response.json()) as Array<Record<string, unknown>>
   return rows.map(mapAddress)
 }
 
-export async function saveCommerceAddresses(userId: string, addresses: SavedAddress[]) {
-  await rest(`saved_addresses?user_id=eq.${encodeURIComponent(userId)}`, { method: "DELETE" })
+export async function saveCommerceAddresses(userId: string, addresses: SavedAddress[], userEmail?: string) {
+  const resolvedUserId = await resolveOrderUserId(userEmail ?? "", userId)
+  if (!resolvedUserId) throw new Error("Account profile was not found in Supabase. Please log out and log in again.")
+
+  await rest(`saved_addresses?user_id=eq.${encodeURIComponent(resolvedUserId)}`, { method: "DELETE" })
   if (!addresses.length) return []
   const response = await rest("saved_addresses", {
     method: "POST",
     headers: { "Content-Type": "application/json", Prefer: "return=representation" },
     body: JSON.stringify(addresses.map((address) => ({
       id: address.id,
-      user_id: userId,
+      user_id: resolvedUserId,
       label: address.label,
       first_name: address.firstName,
       last_name: address.lastName,
