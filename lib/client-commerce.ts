@@ -184,6 +184,12 @@ export async function loginWithSupabase(email: string, password: string) {
   return response.user
 }
 
+export async function completeSocialLogin(accessToken: string) {
+  const response = await commerceFetch<{ user: CommerceUser }>("/api/commerce/auth/social/session", { method: "POST", body: JSON.stringify({ accessToken }) })
+  saveCurrentUser(response.user)
+  return response.user
+}
+
 export async function updateCommerceProfile(user: CommerceUser) {
   const saved = await commerceFetch<CommerceUser>("/api/commerce/users", { method: "PUT", body: JSON.stringify(user) })
   saveCurrentUser(saved)

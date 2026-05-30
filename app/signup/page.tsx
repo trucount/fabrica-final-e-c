@@ -5,6 +5,7 @@ import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Header } from "@/components/header"
+import { SocialAuthButtons } from "@/components/social-auth-buttons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -52,6 +53,7 @@ function SignupContent() {
           <div className="space-y-2 sm:col-span-2"><Label>Phone number</Label><Input type="tel" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} required /></div>
           <div className="space-y-2 sm:col-span-2"><Label>Password</Label><Input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} required /></div>
           <div className="sm:col-span-2"><Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? "Creating account..." : "Sign Up"}</Button></div>
+          <SocialAuthButtons next={next} mode="signup" className="sm:col-span-2" />
           <p className="text-center text-sm text-muted-foreground sm:col-span-2">
             Already have an account? <Link className="font-medium text-foreground underline" href={`/login?next=${encodeURIComponent(next)}`}>Login</Link>
           </p>

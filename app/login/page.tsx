@@ -5,6 +5,7 @@ import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Header } from "@/components/header"
+import { SocialAuthButtons } from "@/components/social-auth-buttons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -68,6 +69,7 @@ function LoginContent() {
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? "Logging in..." : "Login"}</Button>
           <Button type="button" variant="link" className="w-full" disabled={isResetting} onClick={forgotPassword}>{isResetting ? "Sending reset link..." : "Forgot password?"}</Button>
+          <SocialAuthButtons next={next} mode="login" />
           <p className="text-center text-sm text-muted-foreground">
             New here? <Link className="font-medium text-foreground underline" href={`/signup?next=${encodeURIComponent(next)}`}>Create an account</Link>
           </p>

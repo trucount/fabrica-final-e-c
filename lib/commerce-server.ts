@@ -1,6 +1,27 @@
 import type { CartItem } from "@/components/cart-provider"
 import type { CommerceUser, Coupon, CustomerOrder, OrderPolicies, OrderStatus, SavedAddress } from "@/lib/client-commerce"
 
+export type SupabaseSocialProvider = "clerk" | "google" | "github"
+
+type SupabaseAuthIdentity = {
+  identity_data?: Record<string, unknown> | null
+}
+
+type SupabaseAuthUser = {
+  id?: string
+  email?: string
+  user_metadata?: Record<string, unknown> | null
+  identities?: SupabaseAuthIdentity[] | null
+}
+
+function firstString(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim()
+  }
+
+  return ""
+}
+
 function getSupabaseConfig() {
   const url = process.env.SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -358,3 +379,45 @@ export async function supabaseRecoverPassword(email: string, redirectTo?: string
   })
   if (!response.ok) throw new Error(await response.text())
 }
+
+export function getSupabaseSocialAuthUrl(provider: SupabaseSocialProvider, redirectTo: string) {
+  const config = getSupabaseConfig()
+  if (!config.anonKey) throw new Error("Supabase anon key is not configured. Add SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY.")
+
+  const url = new URL(`${config.url}/auth/v1/authorize`)
+  url.searchParams.set("provider", provider)
+  url.searchParams.set("redirect_to", redirectTo)
+  return url.toString()
+}
+
+export async function completeSupabaseSocialLogin(accessToken: string) {
+  const config = getSupabaseConfig()
+  if (!config.anonKey) throw new Error("Supabase anon key is not configured. Add SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY.")
+
+  const response = await fetch(`${config.url}/auth/v1/user`, {
+    headers: headers(config.anonKey, { Authorization: `Bearer ${accessToken}` }),
+  })
+  if (!response.ok) throw new Error(await response.text())
+
+  const authUser = (await response.json()) as SupabaseAuthUser
+  const metadata = authUser.user_metadata ?? {}
+  const identityData = authUser.identities?.find((identity) => identity.identity_data)?.identity_data ?? {}
+  const email = firstString(authUser.email, metadata.email, identityData.email)
+
+  if (!authUser.id || !email) {
+    throw new Error("Your social provider did not return the account details required for checkout.")
+  }
+
+  const fullName = firstString(metadata.full_name, metadata.name, identityData.full_name, identityData.name)
+  const [fallbackFirstName, ...fallbackLastNameParts] = fullName.split(" ").filter(Boolean)
+  const existing = await getCommerceUserByEmail(email)
+
+  return upsertCommerceUser({
+    id: existing?.id ?? authUser.id,
+    email,
+    firstName: existing?.firstName || firstString(metadata.first_name, metadata.given_name, identityData.first_name, identityData.given_name, fallbackFirstName, "Customer"),
+    lastName: existing?.lastName || firstString(metadata.last_name, metadata.family_name, identityData.last_name, identityData.family_name, fallbackLastNameParts.join(" ")),
+    phone: existing?.phone || firstString(metadata.phone, metadata.phone_number, identityData.phone, identityData.phone_number),
+  })
+}
+
