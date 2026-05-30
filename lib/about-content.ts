@@ -6,7 +6,9 @@ export type AboutValueContent = {
 export type AboutContent = {
   heroTitle: string
   heroSubtitle: string
+  heroImageUrl: string
   storyTitle: string
+  storyImageUrl: string
   storyParagraphs: string[]
   valuesTitle: string
   values: AboutValueContent[]
@@ -38,7 +40,9 @@ function parseAboutContent(content: unknown): AboutContent {
   const parsedContent = {
     heroTitle: getString(content, "heroTitle"),
     heroSubtitle: getString(content, "heroSubtitle"),
+    heroImageUrl: getOptionalString(content, "heroImageUrl", "/thudarum-burgundy-evening-suit.jpg"),
     storyTitle: getString(content, "storyTitle"),
+    storyImageUrl: getOptionalString(content, "storyImageUrl", "/thudarum-taupe-suit-detail.jpg"),
     storyParagraphs: getStringArray(content, "storyParagraphs"),
     valuesTitle: getString(content, "valuesTitle"),
     values: getValues(content, "values"),
@@ -110,6 +114,11 @@ function getString(content: Record<string, unknown>, key: string) {
   }
 
   return value
+}
+
+function getOptionalString(content: Record<string, unknown>, key: string, fallback: string) {
+  const value = content[key]
+  return typeof value === "string" && value.trim() ? value : fallback
 }
 
 function getStringArray(content: Record<string, unknown>, key: string) {

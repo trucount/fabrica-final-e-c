@@ -88,7 +88,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
           <div className="absolute inset-0 w-full h-full">
             <iframe
               className="absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2"
-              src="https://www.youtube.com/embed/u9FEg5qur14?autoplay=1&mute=1&loop=1&playlist=u9FEg5qur14&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1"
+              src={homeContent.heroVideoUrl}
               title="Background video"
               allow="autoplay; encrypted-media"
               style={{ pointerEvents: "none" }}
@@ -102,6 +102,12 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
               defaultValue={homeContent.heroTitle}
               aria-label="Home hero title"
               className="h-auto border-dashed bg-background/75 text-center font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-4 sm:mb-6 tracking-tight text-balance"
+            />
+            <Input
+              name="heroVideoUrl"
+              defaultValue={homeContent.heroVideoUrl}
+              aria-label="Home hero video URL"
+              className="mx-auto mb-4 max-w-2xl border-dashed bg-background/75 text-center text-sm text-muted-foreground"
             />
             <Textarea
               name="heroSubtitle"
@@ -163,6 +169,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
 
         <input type="hidden" name="about.heroTitle" defaultValue={aboutContent.heroTitle} />
         <input type="hidden" name="about.heroSubtitle" defaultValue={aboutContent.heroSubtitle} />
+        <input type="hidden" name="about.heroImageUrl" defaultValue={aboutContent.heroImageUrl} />
 
         <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
           <div className="mb-8 rounded-lg border border-dashed p-4 sm:p-6">
@@ -191,8 +198,11 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
                 ))}
               </div>
             </div>
-            <div className="relative aspect-[4/5] bg-secondary overflow-hidden rounded-lg">
-              <Image src="/thudarum-taupe-suit-detail.jpg" alt="Thudarum craftsmanship" fill className="object-cover" />
+            <div className="space-y-3">
+              <Input name="about.storyImageUrl" defaultValue={aboutContent.storyImageUrl} aria-label="About story image URL" className="border-dashed" />
+              <div className="relative aspect-[4/5] bg-secondary overflow-hidden rounded-lg">
+                <Image src={aboutContent.storyImageUrl} alt="Thudarum craftsmanship" fill className="object-cover" />
+              </div>
             </div>
           </div>
         </section>

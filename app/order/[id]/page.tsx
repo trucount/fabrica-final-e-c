@@ -35,12 +35,21 @@ export default function OrderDetailsPage() {
 
   const printOrder = () => window.print()
   const downloadPdf = () => {
-    document.title = `${brandName || "Order"}-${order?.id ?? "receipt"}`
-    window.print()
+    if (!order) return
+
+    const pdf = buildOrderPdf(order, brandName || "Store", statusLabel)
+    const url = URL.createObjectURL(new Blob([pdf], { type: "application/pdf" }))
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `${brandName || "order"}-${order.id}.pdf`.replace(/[^a-z0-9.-]+/gi, "-")
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
   }
 
   if (isLoading) {
-    return <div className="min-h-screen"><Header /><main className="container mx-auto px-4 py-16">Loading order...</main></div>
+    return <div className="min-h-screen"><div className="print:hidden"><Header /></div><main className="container mx-auto px-4 py-16">Loading order...</main></div>
   }
 
   if (error) {
@@ -55,7 +64,7 @@ export default function OrderDetailsPage() {
 
   return (
     <div className="min-h-screen bg-secondary/20 print:bg-white">
-      <Header />
+      <div className="print:hidden"><Header /></div>
       <main className="container mx-auto max-w-5xl px-4 py-6 sm:py-10 print:max-w-none print:px-0 print:py-0">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between print:hidden">
           <div>
@@ -69,7 +78,7 @@ export default function OrderDetailsPage() {
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-2xl border bg-background shadow-sm print:rounded-none print:border-0 print:shadow-none">
+        <section id="order-receipt" className="overflow-hidden rounded-2xl border bg-background shadow-sm print:rounded-none print:border-0 print:shadow-none">
           <div className="bg-foreground p-5 text-background sm:p-8 print:bg-white print:text-black">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -149,4 +158,60 @@ function InfoCard({ label, value }: { label: string; value: string }) {
 
 function SummaryRow({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
   return <div className={`flex justify-between gap-4 ${strong ? "font-serif text-xl font-semibold" : ""}`}><span className="text-muted-foreground">{label}</span><span>{value}</span></div>
+}
+
+
+function buildOrderPdf(order: CustomerOrder, brandName: string, statusLabel: string) {
+  const lines = [
+    brandName,
+    "Order Receipt",
+    `Order ID: ${order.id}`,
+    `Date: ${new Date(order.date).toLocaleString()}`,
+    `Status: ${statusLabel}`,
+    `Payment: ${order.paymentMethod === "cod" ? "Cash on Delivery" : "Razorpay"} / ${order.paymentVerified ? "Verified" : "Pending"}`,
+    "",
+    "Items:",
+    ...order.items.map((item) => `${item.name} | Size ${item.size} | Qty ${item.quantity} | ${formatCurrency(item.price * item.quantity)}`),
+    "",
+    "Ship To:",
+    `${order.shipping.firstName} ${order.shipping.lastName}`,
+    order.shipping.phone,
+    order.shipping.address,
+    order.shipping.apartment,
+    `${order.shipping.city}, ${order.shipping.state} ${order.shipping.zipCode}`,
+    order.shipping.country,
+    "",
+    `Subtotal: ${formatCurrency(order.totals.subtotal)}`,
+    `Discount: -${formatCurrency(order.totals.discount)}`,
+    `Shipping: ${order.totals.shipping === 0 ? "Free" : formatCurrency(order.totals.shipping)}`,
+    `Tax: ${formatCurrency(order.totals.tax)}`,
+    `Total: ${formatCurrency(order.totals.total)}`,
+  ].filter((line) => line !== undefined)
+
+  const content = `BT /F1 11 Tf 50 790 Td 14 TL ${lines.map((line) => `(${escapePdfText(String(line))}) Tj T*`).join(" ")} ET`
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
+  ]
+
+  let pdf = "%PDF-1.4\n"
+  const offsets = [0]
+  objects.forEach((object, index) => {
+    offsets.push(pdf.length)
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`
+  })
+  const xref = pdf.length
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`
+  offsets.slice(1).forEach((offset) => {
+    pdf += `${String(offset).padStart(10, "0")} 00000 n \n`
+  })
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`
+  return pdf
+}
+
+function escapePdfText(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)")
 }

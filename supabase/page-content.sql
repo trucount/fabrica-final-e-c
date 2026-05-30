@@ -25,6 +25,7 @@ values
     '{
       "heroTitle": "Refined Simplicity",
       "heroSubtitle": "Discover timeless pieces crafted for the modern wardrobe",
+      "heroVideoUrl": "https://www.youtube.com/embed/u9FEg5qur14?autoplay=1&mute=1&loop=1&playlist=u9FEg5qur14&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1",
       "collectionsTitle": "Collections",
       "newArrivalsTitle": "New Arrivals",
       "bestSellersTitle": "Best Sellers",
@@ -57,7 +58,14 @@ values
       "body": [
         "Reach out to the Thudarum team for assistance with sizing, fabric details, availability, or order questions.",
         "Our support team will respond as quickly as possible with thoughtful guidance tailored to your needs."
-      ]
+      ],
+      "contact": {
+        "instagram": "https://instagram.com/thudarum",
+        "whatsapp": "https://wa.me/910000000000",
+        "facebook": "https://facebook.com/thudarum",
+        "phone": "+91 00000 00000",
+        "email": "support@thudarum.com"
+      }
     }'::jsonb,
     now()
   ),

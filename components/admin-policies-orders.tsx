@@ -175,6 +175,9 @@ export function AdminOrdersPanel() {
   const { toast } = useToast()
   const [orders, setOrders] = useState<CustomerOrder[]>([])
   const [ordersError, setOrdersError] = useState("")
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
 
   useEffect(() => {
     loadOrders()
@@ -184,6 +187,41 @@ export function AdminOrdersPanel() {
       })
       .catch((error) => setOrdersError(error instanceof Error ? error.message : "Supabase orders could not be loaded."))
   }, [])
+
+  const filteredOrders = orders.filter((order) => {
+    const orderTime = new Date(order.date).getTime()
+    const fromTime = dateFrom ? new Date(`${dateFrom}T00:00:00`).getTime() : null
+    const toTime = dateTo ? new Date(`${dateTo}T23:59:59`).getTime() : null
+
+    return (statusFilter === "all" || order.status === statusFilter)
+      && (!fromTime || orderTime >= fromTime)
+      && (!toTime || orderTime <= toTime)
+  })
+
+  const exportExcel = () => {
+    const header = ["Order", "Customer", "Date", "Total", "Payment", "Verified", "Status", "Items", "Shipping"]
+    const rows = filteredOrders.map((order) => [
+      order.id,
+      order.userEmail,
+      new Date(order.date).toLocaleString(),
+      order.totals.total,
+      order.paymentMethod,
+      order.paymentVerified ? "Verified" : "Pending",
+      order.status,
+      order.items.map((item) => `${item.name} (${item.size}) x ${item.quantity}`).join("; "),
+      `${order.shipping.firstName} ${order.shipping.lastName}, ${order.shipping.address}, ${order.shipping.city}, ${order.shipping.state} ${order.shipping.zipCode}`,
+    ])
+    const escapeCell = (value: string | number | boolean) => `"${String(value).replace(/"/g, '""')}"`
+    const csv = [header, ...rows].map((row) => row.map(escapeCell).join(",")).join("\n")
+    const url = URL.createObjectURL(new Blob([csv], { type: "application/vnd.ms-excel;charset=utf-8" }))
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `orders-${new Date().toISOString().slice(0, 10)}.xls`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
 
   const updateStatus = async (id: string, status: OrderStatus) => {
     const previousOrders = orders
@@ -200,8 +238,27 @@ export function AdminOrdersPanel() {
 
   return (
     <section className="rounded-lg border p-4 sm:p-6">
-      <h2 className="font-serif text-2xl font-semibold mb-4">Orders</h2>
-      {ordersError ? <p className="mb-4 text-sm text-destructive">{ordersError}</p> : null}
+      <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h2 className="font-serif text-2xl font-semibold">Orders</h2>
+          {ordersError ? <p className="mt-2 text-sm text-destructive">{ordersError}</p> : null}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-4 lg:min-w-[680px]">
+          <div className="space-y-1">
+            <Label>Status</Label>
+            <Select value={statusFilter} onValueChange={(value: OrderStatus | "all") => setStatusFilter(value)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {orderStatuses.map((status) => <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1"><Label>From</Label><Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} /></div>
+          <div className="space-y-1"><Label>To</Label><Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} /></div>
+          <Button type="button" variant="outline" onClick={exportExcel} disabled={!filteredOrders.length}>Export Excel</Button>
+        </div>
+      </div>
       <div className="overflow-x-auto rounded-md border">
         <Table className="min-w-[960px]">
           <TableHeader>
@@ -216,7 +273,7 @@ export function AdminOrdersPanel() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell className="font-medium">{order.id}</TableCell>
                 <TableCell>{order.userEmail}</TableCell>
@@ -245,8 +302,8 @@ export function AdminOrdersPanel() {
                 </TableCell>
               </TableRow>
             ))}
-            {!orders.length ? (
-              <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">No orders yet.</TableCell></TableRow>
+            {!filteredOrders.length ? (
+              <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">No orders match these filters.</TableCell></TableRow>
             ) : null}
           </TableBody>
         </Table>

@@ -45,6 +45,7 @@ export async function saveEditedHomeContent(formData: FormData) {
   const content: HomeContent = {
     heroTitle: getRequiredText(formData, "heroTitle", destination),
     heroSubtitle: getRequiredText(formData, "heroSubtitle", destination),
+    heroVideoUrl: getRequiredText(formData, "heroVideoUrl", destination),
     collectionsTitle: getRequiredText(formData, "collectionsTitle", destination),
     newArrivalsTitle: getRequiredText(formData, "newArrivalsTitle", destination),
     bestSellersTitle: getRequiredText(formData, "bestSellersTitle", destination),
@@ -114,6 +115,15 @@ export async function saveEditedInfoPageContent(formData: FormData) {
     title: getRequiredText(formData, "title", destination),
     description: getRequiredText(formData, "description", destination),
     body: getRequiredTextList(formData, "body", destination),
+    ...(slug === "contact" ? {
+      contact: {
+        instagram: toText(formData.get("contact.instagram")),
+        whatsapp: toText(formData.get("contact.whatsapp")),
+        facebook: toText(formData.get("contact.facebook")),
+        phone: toText(formData.get("contact.phone")),
+        email: toText(formData.get("contact.email")),
+      },
+    } : {}),
   }
 
   await saveInfoPageContent(slug, content)
@@ -155,7 +165,9 @@ function getAboutContentFromForm(formData: FormData, destination: string): About
   return {
     heroTitle: getRequiredText(formData, "about.heroTitle", destination),
     heroSubtitle: getRequiredText(formData, "about.heroSubtitle", destination),
+    heroImageUrl: getRequiredText(formData, "about.heroImageUrl", destination),
     storyTitle: getRequiredText(formData, "about.storyTitle", destination),
+    storyImageUrl: getRequiredText(formData, "about.storyImageUrl", destination),
     storyParagraphs: getRequiredTextList(formData, "about.storyParagraphs", destination),
     valuesTitle: getRequiredText(formData, "about.valuesTitle", destination),
     values: [0, 1, 2].map((index) => ({

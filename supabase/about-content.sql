@@ -11,7 +11,9 @@ values (
   '{
     "heroTitle": "About Thudarum",
     "heroSubtitle": "Crafting timeless elegance for the modern gentleman",
+    "heroImageUrl": "/thudarum-burgundy-evening-suit.jpg",
     "storyTitle": "Our Story",
+    "storyImageUrl": "/thudarum-taupe-suit-detail.jpg",
     "storyParagraphs": [
       "Founded with a vision to redefine modern menswear, Thudarum represents the perfect marriage of traditional craftsmanship and contemporary design. Our name, derived from the Tamil word meaning \"continuation,\" embodies our commitment to carrying forward the legacy of fine tailoring into the modern era.",
       "Every piece in our collection is meticulously crafted using premium Italian fabrics and constructed by master tailors who have honed their craft over decades. We believe that true luxury lies not in excess, but in the perfect balance of form, function, and timeless style.",

@@ -31,6 +31,7 @@ values
     '{
       "heroTitle": "Refined Simplicity",
       "heroSubtitle": "Discover timeless pieces crafted for the modern wardrobe",
+      "heroVideoUrl": "https://www.youtube.com/embed/u9FEg5qur14?autoplay=1&mute=1&loop=1&playlist=u9FEg5qur14&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1",
       "collectionsTitle": "Collections",
       "newArrivalsTitle": "New Arrivals",
       "bestSellersTitle": "Best Sellers",
@@ -58,7 +59,9 @@ values
     '{
       "heroTitle": "About Thudarum",
       "heroSubtitle": "Crafting timeless elegance for the modern gentleman",
+      "heroImageUrl": "/thudarum-burgundy-evening-suit.jpg",
       "storyTitle": "Our Story",
+      "storyImageUrl": "/thudarum-taupe-suit-detail.jpg",
       "storyParagraphs": [
         "Founded with a vision to redefine modern menswear, Thudarum represents the perfect marriage of traditional craftsmanship and contemporary design.",
         "Every piece in our collection is meticulously crafted using premium fabrics and refined construction.",
@@ -75,11 +78,11 @@ values
     }'::jsonb,
     now()
   ),
-  ('shipping', '{"title":"Shipping","description":"Shipping information","body":["Complimentary shipping rules are controlled from Admin Policies."]}'::jsonb, now()),
-  ('returns', '{"title":"Returns","description":"Returns information","body":["30-day return policy for unworn items."]}'::jsonb, now()),
-  ('privacy', '{"title":"Privacy Policy","description":"Privacy information","body":["We respect your privacy and protect your data."]}'::jsonb, now()),
-  ('terms', '{"title":"Terms of Service","description":"Terms information","body":["By using this site, you agree to our terms."]}'::jsonb, now()),
-  ('contact', '{"title":"Contact","description":"Contact us","body":["Reach out to our support team for help."]}'::jsonb, now())
+  ('page:shipping', '{"title":"Shipping","description":"Shipping information","body":["Complimentary shipping rules are controlled from Admin Policies."]}'::jsonb, now()),
+  ('page:returns', '{"title":"Returns","description":"Returns information","body":["30-day return policy for unworn items."]}'::jsonb, now()),
+  ('page:privacy', '{"title":"Privacy Policy","description":"Privacy information","body":["We respect your privacy and protect your data."]}'::jsonb, now()),
+  ('page:terms', '{"title":"Terms of Service","description":"Terms information","body":["By using this site, you agree to our terms."]}'::jsonb, now()),
+  ('page:contact', '{"title":"Contact","description":"Contact us","body":["Reach out to our support team for help."],"contact":{"instagram":"https://instagram.com/thudarum","whatsapp":"https://wa.me/910000000000","facebook":"https://facebook.com/thudarum","phone":"+91 00000 00000","email":"support@thudarum.com"}}'::jsonb, now())
 on conflict (id) do update
 set content = excluded.content,
     updated_at = excluded.updated_at;
