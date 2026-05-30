@@ -15,25 +15,53 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "Thudarum - Modern Fashion",
-  description: "Minimalist contemporary fashion for the discerning individual",
+  applicationName: "ASTERA",
+  title: {
+    default: "ASTERA | Premium 925 Silver Jewelry",
+    template: "%s | ASTERA",
+  },
+  description:
+    "Shop ASTERA for premium 925 sterling silver jewelry, including elegant rings, necklaces, bracelets, and everyday silver jewels.",
+  keywords: [
+    "ASTERA",
+    "ASTERA925",
+    "925 silver jewelry",
+    "premium silver jewels",
+    "sterling silver jewelry",
+    "silver rings",
+    "silver necklaces",
+    "silver bracelets",
+  ],
   generator: "saprrow",
+  openGraph: {
+    title: "ASTERA | Premium 925 Silver Jewelry",
+    description:
+      "Discover ASTERA premium 925 sterling silver jewelry crafted for timeless everyday elegance.",
+    siteName: "ASTERA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ASTERA | Premium 925 Silver Jewelry",
+    description:
+      "Discover ASTERA premium 925 sterling silver jewelry crafted for timeless everyday elegance.",
+  },
   icons: {
     icon: [
       {
-        url: "",
+        url: "/icon-light-32x32.png",
         media: "(prefers-color-scheme: light)",
       },
       {
-        url: "",
+        url: "/icon-dark-32x32.png",
         media: "(prefers-color-scheme: dark)",
       },
       {
-        url: "",
+        url: "/icon.svg",
         type: "image/svg+xml",
       },
     ],
-    apple: "",
+    apple: "/apple-icon.png",
   },
 }
 
