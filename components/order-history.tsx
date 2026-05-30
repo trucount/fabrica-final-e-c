@@ -5,15 +5,36 @@ import Link from "next/link"
 import { Button } from "./ui/button"
 import { Package, ChevronRight } from "lucide-react"
 import { formatCurrency } from "@/lib/currency"
-import { type CustomerOrder, getCurrentUser, getOrders, orderStatuses } from "@/lib/client-commerce"
+import { type CustomerOrder, getCurrentUser, loadOrders, orderStatuses } from "@/lib/client-commerce"
 
 export function OrderHistory() {
   const [orders, setOrders] = useState<CustomerOrder[]>([])
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const user = getCurrentUser()
-    setOrders(getOrders().filter((order) => !user || order.userEmail === user.email))
+    if (!user) {
+      setIsLoading(false)
+      return
+    }
+
+    loadOrders({ email: user.email })
+      .then((nextOrders) => {
+        setOrders(nextOrders)
+        setError("")
+      })
+      .catch((error) => setError(error instanceof Error ? error.message : "Orders could not be loaded."))
+      .finally(() => setIsLoading(false))
   }, [])
+
+  if (isLoading) {
+    return <div className="py-16 text-center text-muted-foreground">Loading your orders...</div>
+  }
+
+  if (error) {
+    return <div className="py-16 text-center text-destructive">{error}</div>
+  }
 
   if (!orders.length) {
     return (
