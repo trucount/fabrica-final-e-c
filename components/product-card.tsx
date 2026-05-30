@@ -9,6 +9,7 @@ import { Button } from "./ui/button"
 import { useCart } from "./cart-provider"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
+import { formatCurrency } from "@/lib/currency"
 
 interface Product {
   id: string
@@ -83,7 +84,7 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground uppercase tracking-wider">{product.category}</p>
           <h3 className="font-medium text-sm">{product.name}</h3>
-          <p className="text-sm font-medium">${product.price}</p>
+          <p className="text-sm font-medium">{formatCurrency(product.price)}</p>
         </div>
       </Link>
     </div>
