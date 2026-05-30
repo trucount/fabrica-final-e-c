@@ -10,6 +10,7 @@ import { Label } from "./ui/label"
 import { useCart } from "./cart-provider"
 import { useToast } from "@/hooks/use-toast"
 import { CreditCard, Lock } from "lucide-react"
+import { formatCurrency } from "@/lib/currency"
 
 interface CheckoutFormProps {
   total: number
@@ -308,7 +309,7 @@ export function CheckoutForm({ total }: CheckoutFormProps) {
           ) : (
             <span className="flex items-center gap-2">
               <Lock className="h-4 w-4 sm:h-5 sm:w-5" />
-              Complete Order - ${total.toFixed(2)}
+              Complete Order - {formatCurrency(total)}
             </span>
           )}
         </Button>

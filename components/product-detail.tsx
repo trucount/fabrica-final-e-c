@@ -6,6 +6,7 @@ import { Button } from "./ui/button"
 import { useCart } from "./cart-provider"
 import { useToast } from "@/hooks/use-toast"
 import { Check, ShoppingBag, AlertCircle } from "lucide-react"
+import { formatCurrency } from "@/lib/currency"
 
 interface Product {
   id: string
@@ -114,7 +115,7 @@ export function ProductDetail({ product }: { product: Product }) {
             <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold mb-3 sm:mb-4 text-balance">
               {product.name}
             </h1>
-            <p className="text-xl sm:text-2xl font-medium">${product.price}</p>
+            <p className="text-xl sm:text-2xl font-medium">{formatCurrency(product.price)}</p>
           </div>
 
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6 sm:mb-8">
@@ -193,7 +194,7 @@ export function ProductDetail({ product }: { product: Product }) {
           <div className="border-t border-border mt-6 sm:mt-8 pt-6 sm:pt-8 space-y-3 sm:space-y-4 text-xs sm:text-sm">
             <div>
               <h4 className="font-medium mb-2">Free Shipping</h4>
-              <p className="text-muted-foreground">Complimentary shipping on all orders over $200</p>
+              <p className="text-muted-foreground">Complimentary shipping on all orders over ₹200</p>
             </div>
             <div>
               <h4 className="font-medium mb-2">Returns & Exchanges</h4>

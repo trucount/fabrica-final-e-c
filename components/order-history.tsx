@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "./ui/button"
 import { Package, ChevronRight, Truck, CheckCircle, MapPin, Clock } from "lucide-react"
+import { formatCurrency } from "@/lib/currency"
 
 interface Order {
   id: string
@@ -146,7 +147,7 @@ export function OrderHistory() {
                     <span className={`text-sm font-medium capitalize ${getStatusColor(order.status)}`}>
                       {order.status}
                     </span>
-                    <span className="font-medium">${order.total.toFixed(2)}</span>
+                    <span className="font-medium">{formatCurrency(order.total)}</span>
                   </div>
                 </div>
 
