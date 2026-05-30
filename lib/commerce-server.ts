@@ -296,10 +296,13 @@ export async function supabaseAuthSignUp(user: CommerceUser, password: string, r
     body: JSON.stringify({ email: user.email, password, data: { first_name: user.firstName, last_name: user.lastName, phone: user.phone } }),
   })
   if (!response.ok) throw new Error(await response.text())
+
   const payload = (await response.json()) as { user?: { id?: string; email_confirmed_at?: string | null } | null }
-  const authUserId = payload.user?.id
-  if (!authUserId) throw new Error("Supabase Auth did not return a user id.")
-  return { id: authUserId, emailVerified: Boolean(payload.user?.email_confirmed_at) }
+
+  return {
+    id: payload.user?.id ?? null,
+    emailVerified: Boolean(payload.user?.email_confirmed_at),
+  }
 }
 
 export async function supabaseAuthLogin(email: string, password: string) {

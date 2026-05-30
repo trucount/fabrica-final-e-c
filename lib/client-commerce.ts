@@ -171,7 +171,7 @@ export async function persistAddresses(userId: string, addresses: SavedAddress[]
 }
 
 export async function signupWithSupabase(input: Omit<CommerceUser, "id"> & { password: string; redirectTo?: string }) {
-  const response = await commerceFetch<{ user: CommerceUser; emailVerified: boolean }>("/api/commerce/auth/signup", { method: "POST", body: JSON.stringify(input) })
+  const response = await commerceFetch<{ user: CommerceUser; emailVerified: boolean; pendingVerification: boolean }>("/api/commerce/auth/signup", { method: "POST", body: JSON.stringify(input) })
   if (response.emailVerified) saveCurrentUser(response.user)
   return response
 }
