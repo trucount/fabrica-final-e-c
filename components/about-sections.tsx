@@ -14,7 +14,7 @@ export function AboutSections({ content, roundedImage = false, showHero = true }
     <>
       {showHero ? (
         <section className="relative h-[50vh] sm:h-[60vh] flex items-center justify-center bg-secondary">
-          <div className="absolute inset-0 bg-[url('/thudarum-burgundy-evening-suit.jpg')] bg-cover bg-center opacity-80" />
+          <div className="absolute inset-0 bg-cover bg-center opacity-80" style={{ backgroundImage: `url(${content.heroImageUrl})` }} />
           <div className="relative z-10 text-center px-4">
             <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-4 tracking-tight">
               {content.heroTitle}
@@ -35,7 +35,7 @@ export function AboutSections({ content, roundedImage = false, showHero = true }
             </div>
           </div>
           <div className={`relative aspect-[4/5] bg-secondary overflow-hidden${roundedImage ? " rounded-lg" : ""}`}>
-            <Image src="/thudarum-taupe-suit-detail.jpg" alt="Thudarum craftsmanship" fill className="object-cover" />
+            <Image src={content.storyImageUrl} alt="Thudarum craftsmanship" fill className="object-cover" />
           </div>
         </div>
       </section>

@@ -1,6 +1,7 @@
 export type HomeContent = {
   heroTitle: string
   heroSubtitle: string
+  heroVideoUrl: string
   collectionsTitle: string
   newArrivalsTitle: string
   bestSellersTitle: string
@@ -76,6 +77,7 @@ function parseHomeContent(content: unknown): HomeContent {
   return {
     heroTitle: getString(content, "heroTitle"),
     heroSubtitle: getString(content, "heroSubtitle"),
+    heroVideoUrl: getOptionalString(content, "heroVideoUrl", "https://www.youtube.com/embed/u9FEg5qur14?autoplay=1&mute=1&loop=1&playlist=u9FEg5qur14&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1"),
     collectionsTitle: getString(content, "collectionsTitle"),
     newArrivalsTitle: getString(content, "newArrivalsTitle"),
     bestSellersTitle: getString(content, "bestSellersTitle"),
@@ -91,6 +93,11 @@ function getString(content: Record<string, unknown>, key: string) {
   }
 
   return value
+}
+
+function getOptionalString(content: Record<string, unknown>, key: string, fallback: string) {
+  const value = content[key]
+  return typeof value === "string" && value.trim() ? value : fallback
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

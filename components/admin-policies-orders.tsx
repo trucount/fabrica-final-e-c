@@ -15,18 +15,20 @@ import {
   type CouponKind,
   type OrderPolicies,
   type OrderStatus,
-  defaultPolicies,
-  getOrders,
-  getPolicies,
+  emptyPolicies,
+  loadOrders,
+  loadPolicies,
   orderStatuses,
-  saveOrders,
-  savePolicies,
+  persistOrderStatus,
+  persistPolicies,
 } from "@/lib/client-commerce"
 import { Plus, Save, Trash2 } from "lucide-react"
 
 export function AdminPoliciesPanel() {
   const { toast } = useToast()
-  const [policies, setPolicies] = useState<OrderPolicies>(defaultPolicies)
+  const [policies, setPolicies] = useState<OrderPolicies>(emptyPolicies)
+  const [policiesError, setPoliciesError] = useState("")
+  const [isSavingPolicies, setIsSavingPolicies] = useState(false)
   const [coupon, setCoupon] = useState<Coupon>({
     code: "",
     label: "",
@@ -37,13 +39,28 @@ export function AdminPoliciesPanel() {
   })
 
   useEffect(() => {
-    setPolicies(getPolicies())
+    loadPolicies()
+      .then((nextPolicies) => {
+        setPolicies(nextPolicies)
+        setPoliciesError("")
+      })
+      .catch((error) => setPoliciesError(error instanceof Error ? error.message : "Supabase policies could not be loaded."))
   }, [])
 
-  const save = (nextPolicies = policies) => {
-    savePolicies(nextPolicies)
-    setPolicies(nextPolicies)
-    toast({ title: "Policies saved", description: "Cart summary policies are updated on this browser." })
+  const save = async (nextPolicies = policies) => {
+    setIsSavingPolicies(true)
+    try {
+      const saved = await persistPolicies(nextPolicies)
+      setPolicies(saved)
+      setPoliciesError("")
+      toast({ title: "Policies saved", description: "Shipping, tax, and coupons were saved to Supabase." })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Supabase save failed."
+      setPoliciesError(message)
+      toast({ title: "Policy save failed", description: message, variant: "destructive" })
+    } finally {
+      setIsSavingPolicies(false)
+    }
   }
 
   const addCoupon = () => {
@@ -61,7 +78,7 @@ export function AdminPoliciesPanel() {
       ],
     }
     setCoupon({ code: "", label: "", type: "universal", discountType: "percent", discountValue: 0, active: true })
-    save(nextPolicies)
+    void save(nextPolicies)
   }
 
   return (
@@ -85,9 +102,10 @@ export function AdminPoliciesPanel() {
             <Input type="number" min="0" step="0.01" value={policies.taxRate} onChange={(event) => setPolicies({ ...policies, taxRate: Number(event.target.value) })} />
           </div>
         </div>
-        <Button className="mt-4" onClick={() => save()}>
+        {policiesError ? <p className="mt-4 text-sm text-destructive">{policiesError}</p> : null}
+        <Button className="mt-4" onClick={() => void save()} disabled={isSavingPolicies}>
           <Save className="mr-2 h-4 w-4" />
-          Save Policies
+          {isSavingPolicies ? "Saving..." : "Save Policies"}
         </Button>
       </section>
 
@@ -135,10 +153,10 @@ export function AdminPoliciesPanel() {
                   <TableCell>{item.active ? "Active" : "Inactive"}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => save({ ...policies, coupons: policies.coupons.map((couponItem) => couponItem.code === item.code ? { ...couponItem, active: !couponItem.active } : couponItem) })}>
+                      <Button size="sm" variant="outline" onClick={() => void save({ ...policies, coupons: policies.coupons.map((couponItem) => couponItem.code === item.code ? { ...couponItem, active: !couponItem.active } : couponItem) })}>
                         {item.active ? "Disable" : "Enable"}
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => save({ ...policies, coupons: policies.coupons.filter((couponItem) => couponItem.code !== item.code) })}>
+                      <Button size="sm" variant="destructive" onClick={() => void save({ ...policies, coupons: policies.coupons.filter((couponItem) => couponItem.code !== item.code) })}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -156,21 +174,91 @@ export function AdminPoliciesPanel() {
 export function AdminOrdersPanel() {
   const { toast } = useToast()
   const [orders, setOrders] = useState<CustomerOrder[]>([])
+  const [ordersError, setOrdersError] = useState("")
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
 
   useEffect(() => {
-    setOrders(getOrders())
+    loadOrders()
+      .then((nextOrders) => {
+        setOrders(nextOrders)
+        setOrdersError("")
+      })
+      .catch((error) => setOrdersError(error instanceof Error ? error.message : "Supabase orders could not be loaded."))
   }, [])
 
-  const updateStatus = (id: string, status: OrderStatus) => {
+  const filteredOrders = orders.filter((order) => {
+    const orderTime = new Date(order.date).getTime()
+    const fromTime = dateFrom ? new Date(`${dateFrom}T00:00:00`).getTime() : null
+    const toTime = dateTo ? new Date(`${dateTo}T23:59:59`).getTime() : null
+
+    return (statusFilter === "all" || order.status === statusFilter)
+      && (!fromTime || orderTime >= fromTime)
+      && (!toTime || orderTime <= toTime)
+  })
+
+  const exportExcel = () => {
+    const header = ["Order", "Customer", "Date", "Total", "Payment", "Verified", "Status", "Items", "Shipping"]
+    const rows = filteredOrders.map((order) => [
+      order.id,
+      order.userEmail,
+      new Date(order.date).toLocaleString(),
+      order.totals.total,
+      order.paymentMethod,
+      order.paymentVerified ? "Verified" : "Pending",
+      order.status,
+      order.items.map((item) => `${item.name} (${item.size}) x ${item.quantity}`).join("; "),
+      `${order.shipping.firstName} ${order.shipping.lastName}, ${order.shipping.address}, ${order.shipping.city}, ${order.shipping.state} ${order.shipping.zipCode}`,
+    ])
+    const escapeCell = (value: string | number | boolean) => `"${String(value).replace(/"/g, '""')}"`
+    const csv = [header, ...rows].map((row) => row.map(escapeCell).join(",")).join("\n")
+    const url = URL.createObjectURL(new Blob([csv], { type: "application/vnd.ms-excel;charset=utf-8" }))
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `orders-${new Date().toISOString().slice(0, 10)}.xls`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  const updateStatus = async (id: string, status: OrderStatus) => {
+    const previousOrders = orders
     const nextOrders = orders.map((order) => (order.id === id ? { ...order, status } : order))
     setOrders(nextOrders)
-    saveOrders(nextOrders)
-    toast({ title: "Order status updated", description: `Order ${id} is now ${status.replace("_", " ")}.` })
+    try {
+      await persistOrderStatus(id, status)
+      toast({ title: "Order status updated", description: `Order ${id} is now ${status.replace("_", " ")}.` })
+    } catch (error) {
+      setOrders(previousOrders)
+      toast({ title: "Order status update failed", description: error instanceof Error ? error.message : "Supabase status update failed.", variant: "destructive" })
+    }
   }
 
   return (
     <section className="rounded-lg border p-4 sm:p-6">
-      <h2 className="font-serif text-2xl font-semibold mb-4">Orders</h2>
+      <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h2 className="font-serif text-2xl font-semibold">Orders</h2>
+          {ordersError ? <p className="mt-2 text-sm text-destructive">{ordersError}</p> : null}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-4 lg:min-w-[680px]">
+          <div className="space-y-1">
+            <Label>Status</Label>
+            <Select value={statusFilter} onValueChange={(value: OrderStatus | "all") => setStatusFilter(value)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {orderStatuses.map((status) => <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1"><Label>From</Label><Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} /></div>
+          <div className="space-y-1"><Label>To</Label><Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} /></div>
+          <Button type="button" variant="outline" onClick={exportExcel} disabled={!filteredOrders.length}>Export Excel</Button>
+        </div>
+      </div>
       <div className="overflow-x-auto rounded-md border">
         <Table className="min-w-[960px]">
           <TableHeader>
@@ -181,10 +269,11 @@ export function AdminOrdersPanel() {
               <TableHead>Total</TableHead>
               <TableHead>Payment</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Items</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell className="font-medium">{order.id}</TableCell>
                 <TableCell>{order.userEmail}</TableCell>
@@ -192,7 +281,7 @@ export function AdminOrdersPanel() {
                 <TableCell>{formatCurrency(order.totals.total)}</TableCell>
                 <TableCell>{order.paymentMethod === "cod" ? "COD" : "Razorpay"} / {order.paymentVerified ? "Verified" : "Pending"}</TableCell>
                 <TableCell>
-                  <Select value={order.status} onValueChange={(value: OrderStatus) => updateStatus(order.id, value)}>
+                  <Select value={order.status} onValueChange={(value: OrderStatus) => void updateStatus(order.id, value)}>
                     <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {orderStatuses.map((status) => (
@@ -201,10 +290,20 @@ export function AdminOrdersPanel() {
                     </SelectContent>
                   </Select>
                 </TableCell>
+                <TableCell className="min-w-80">
+                  <div className="space-y-2">
+                    {order.items.map((item) => (
+                      <div key={`${order.id}-${item.id}-${item.size}`} className="rounded-md bg-secondary/60 p-2 text-xs">
+                        <div className="font-medium">{item.name}</div>
+                        <div className="text-muted-foreground">Size {item.size} × {item.quantity} · {formatCurrency(item.price * item.quantity)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
-            {!orders.length ? (
-              <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">No orders yet.</TableCell></TableRow>
+            {!filteredOrders.length ? (
+              <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">No orders match these filters.</TableCell></TableRow>
             ) : null}
           </TableBody>
         </Table>

@@ -31,6 +31,7 @@ values
     '{
       "heroTitle": "Refined Simplicity",
       "heroSubtitle": "Discover timeless pieces crafted for the modern wardrobe",
+      "heroVideoUrl": "https://www.youtube.com/embed/u9FEg5qur14?autoplay=1&mute=1&loop=1&playlist=u9FEg5qur14&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1",
       "collectionsTitle": "Collections",
       "newArrivalsTitle": "New Arrivals",
       "bestSellersTitle": "Best Sellers",
@@ -58,7 +59,9 @@ values
     '{
       "heroTitle": "About Thudarum",
       "heroSubtitle": "Crafting timeless elegance for the modern gentleman",
+      "heroImageUrl": "/thudarum-burgundy-evening-suit.jpg",
       "storyTitle": "Our Story",
+      "storyImageUrl": "/thudarum-taupe-suit-detail.jpg",
       "storyParagraphs": [
         "Founded with a vision to redefine modern menswear, Thudarum represents the perfect marriage of traditional craftsmanship and contemporary design.",
         "Every piece in our collection is meticulously crafted using premium fabrics and refined construction.",
@@ -75,11 +78,11 @@ values
     }'::jsonb,
     now()
   ),
-  ('shipping', '{"title":"Shipping","description":"Shipping information","body":["Complimentary shipping rules are controlled from Admin Policies."]}'::jsonb, now()),
-  ('returns', '{"title":"Returns","description":"Returns information","body":["30-day return policy for unworn items."]}'::jsonb, now()),
-  ('privacy', '{"title":"Privacy Policy","description":"Privacy information","body":["We respect your privacy and protect your data."]}'::jsonb, now()),
-  ('terms', '{"title":"Terms of Service","description":"Terms information","body":["By using this site, you agree to our terms."]}'::jsonb, now()),
-  ('contact', '{"title":"Contact","description":"Contact us","body":["Reach out to our support team for help."]}'::jsonb, now())
+  ('page:shipping', '{"title":"Shipping","description":"Shipping information","body":["Complimentary shipping rules are controlled from Admin Policies."]}'::jsonb, now()),
+  ('page:returns', '{"title":"Returns","description":"Returns information","body":["30-day return policy for unworn items."]}'::jsonb, now()),
+  ('page:privacy', '{"title":"Privacy Policy","description":"Privacy information","body":["We respect your privacy and protect your data."]}'::jsonb, now()),
+  ('page:terms', '{"title":"Terms of Service","description":"Terms information","body":["By using this site, you agree to our terms."]}'::jsonb, now()),
+  ('page:contact', '{"title":"Contact","description":"Contact us","body":["Reach out to our support team for help."],"contact":{"instagram":"https://instagram.com/thudarum","whatsapp":"https://wa.me/910000000000","facebook":"https://facebook.com/thudarum","phone":"+91 00000 00000","email":"support@thudarum.com"}}'::jsonb, now())
 on conflict (id) do update
 set content = excluded.content,
     updated_at = excluded.updated_at;
@@ -244,7 +247,6 @@ create table if not exists public.app_users (
   first_name text not null,
   last_name text not null,
   phone text not null,
-  password_hash text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -328,9 +330,7 @@ create table if not exists public.coupons (
 
 insert into public.coupons (code, label, coupon_type, discount_type, discount_value, active, updated_at)
 values
-  ('WELCOME10', 'Welcome 10%', 'universal', 'percent', 10, true, now()),
-  ('SAVE20', 'Save ₹20', 'universal', 'amount', 20, true, now()),
-  ('LUXURY15', 'Luxury 15%', 'one_time', 'percent', 15, true, now())
+  ('WELCOME10', 'Welcome 10%', 'universal', 'percent', 10, true, now())
 on conflict (code) do update
 set label = excluded.label,
     coupon_type = excluded.coupon_type,
@@ -338,6 +338,9 @@ set label = excluded.label,
     discount_value = excluded.discount_value,
     active = excluded.active,
     updated_at = excluded.updated_at;
+
+delete from public.coupons
+where code in ('SAVE20', 'LUXURY15');
 
 create table if not exists public.orders (
   id text primary key,
@@ -430,6 +433,18 @@ on public.products
 for select
 using (is_active = true);
 
--- Most writes/reads are intentionally private for now. The Next.js server uses
--- SUPABASE_SERVICE_ROLE_KEY for admin/product/collection operations. Add anon
--- policies later only when these commerce tables are moved off client storage.
+drop policy if exists "Site content is publicly readable" on public.site_content;
+create policy "Site content is publicly readable"
+on public.site_content
+for select
+using (true);
+
+drop policy if exists "Collections are publicly readable" on public.collections;
+create policy "Collections are publicly readable"
+on public.collections
+for select
+using (true);
+
+-- Commerce writes are performed by Next.js API routes with SUPABASE_SERVICE_ROLE_KEY
+-- so admin policy changes, orders, order items, users, and addresses persist even
+-- while row-level security protects those tables from direct anonymous writes.

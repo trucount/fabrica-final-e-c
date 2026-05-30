@@ -79,6 +79,15 @@ export default async function EditInfoPage({ params, searchParams }: EditInfoPag
               <Textarea key={index} name="body" defaultValue={paragraph} aria-label={`${title} paragraph ${index + 1}`} className="min-h-28 resize-y border-dashed text-muted-foreground leading-relaxed" />
             ))}
           </div>
+          {slug === "contact" ? (
+            <div className="mx-auto mt-8 grid max-w-3xl gap-4 rounded-lg border border-dashed p-4 sm:grid-cols-2 sm:p-6">
+              <Input name="contact.instagram" defaultValue={content.contact?.instagram ?? ""} placeholder="Instagram URL" aria-label="Instagram URL" className="border-dashed" />
+              <Input name="contact.whatsapp" defaultValue={content.contact?.whatsapp ?? ""} placeholder="WhatsApp URL" aria-label="WhatsApp URL" className="border-dashed" />
+              <Input name="contact.facebook" defaultValue={content.contact?.facebook ?? ""} placeholder="Facebook URL" aria-label="Facebook URL" className="border-dashed" />
+              <Input name="contact.phone" defaultValue={content.contact?.phone ?? ""} placeholder="Phone number" aria-label="Phone number" className="border-dashed" />
+              <Input name="contact.email" defaultValue={content.contact?.email ?? ""} placeholder="Email address" aria-label="Email address" className="border-dashed sm:col-span-2" />
+            </div>
+          ) : null}
         </section>
       </form>
     </div>

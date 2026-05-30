@@ -54,13 +54,19 @@ export default async function EditAboutPage({ searchParams }: EditAboutPageProps
       <form id="about-edit-form" action={saveEditedAboutContent}>
         <input type="hidden" name="savePassword" />
         <section className="relative h-[50vh] sm:h-[60vh] flex items-center justify-center bg-secondary">
-          <div className="absolute inset-0 bg-[url('/thudarum-burgundy-evening-suit.jpg')] bg-cover bg-center opacity-80" />
+          <div className="absolute inset-0 bg-cover bg-center opacity-80" style={{ backgroundImage: `url(${content.heroImageUrl})` }} />
           <div className="relative z-10 text-center px-4 w-full max-w-4xl">
             <Input
               name="heroTitle"
               defaultValue={content.heroTitle}
               aria-label="Hero title"
               className="h-auto border-dashed bg-background/75 text-center font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-4 tracking-tight"
+            />
+            <Input
+              name="heroImageUrl"
+              defaultValue={content.heroImageUrl}
+              aria-label="Hero image URL"
+              className="mx-auto mb-4 max-w-2xl border-dashed bg-background/75 text-center text-sm text-muted-foreground"
             />
             <Textarea
               name="heroSubtitle"
@@ -93,8 +99,11 @@ export default async function EditAboutPage({ searchParams }: EditAboutPageProps
                 ))}
               </div>
             </div>
-            <div className="relative aspect-[4/5] bg-secondary overflow-hidden">
-              <Image src="/thudarum-taupe-suit-detail.jpg" alt="Thudarum craftsmanship" fill className="object-cover" />
+            <div className="space-y-3">
+              <Input name="storyImageUrl" defaultValue={content.storyImageUrl} aria-label="Story image URL" className="border-dashed" />
+              <div className="relative aspect-[4/5] bg-secondary overflow-hidden">
+                <Image src={content.storyImageUrl} alt="Thudarum craftsmanship" fill className="object-cover" />
+              </div>
             </div>
           </div>
         </section>

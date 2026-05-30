@@ -1,9 +1,18 @@
 export type InfoPageSlug = "contact" | "shipping" | "returns" | "privacy" | "terms"
 
+export type ContactDetails = {
+  instagram: string
+  whatsapp: string
+  facebook: string
+  phone: string
+  email: string
+}
+
 export type InfoPageContent = {
   title: string
   description: string
   body: string[]
+  contact?: ContactDetails
 }
 
 export const INFO_PAGE_SLUGS: InfoPageSlug[] = ["contact", "shipping", "returns", "privacy", "terms"]
@@ -95,7 +104,26 @@ function parseInfoPageContent(content: unknown): InfoPageContent {
     title: getString(content, "title"),
     description: getString(content, "description"),
     body,
+    contact: getContactDetails(content),
   }
+}
+
+function getContactDetails(content: Record<string, unknown>) {
+  const value = content.contact
+  if (!isRecord(value)) return undefined
+
+  return {
+    instagram: getOptionalString(value, "instagram"),
+    whatsapp: getOptionalString(value, "whatsapp"),
+    facebook: getOptionalString(value, "facebook"),
+    phone: getOptionalString(value, "phone"),
+    email: getOptionalString(value, "email"),
+  }
+}
+
+function getOptionalString(content: Record<string, unknown>, key: string) {
+  const value = content[key]
+  return typeof value === "string" ? value : ""
 }
 
 function getString(content: Record<string, unknown>, key: string) {

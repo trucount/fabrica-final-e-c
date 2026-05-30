@@ -45,7 +45,9 @@ export async function saveEditedAboutContent(formData: FormData) {
   const content: AboutContent = {
     heroTitle: getRequiredText(formData, "heroTitle", destination),
     heroSubtitle: getRequiredText(formData, "heroSubtitle", destination),
+    heroImageUrl: getRequiredText(formData, "heroImageUrl", destination),
     storyTitle: getRequiredText(formData, "storyTitle", destination),
+    storyImageUrl: getRequiredText(formData, "storyImageUrl", destination),
     storyParagraphs: getRequiredTextList(formData, "storyParagraphs", destination),
     valuesTitle: getRequiredText(formData, "valuesTitle", destination),
     values: [0, 1, 2].map((index) => ({
