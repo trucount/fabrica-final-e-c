@@ -293,6 +293,43 @@ export async function upsertCommerceUser(user: CommerceUser) {
   return rows[0] ? mapUser(rows[0]) : user
 }
 
+
+export async function getCommerceUsers() {
+  const response = await rest("app_users?select=*&order=created_at.desc")
+  const rows = (await response.json()) as Array<Record<string, unknown>>
+  return rows.map(mapUser)
+}
+
+export async function inviteCommerceUser(input: { email: string; firstName?: string; lastName?: string; phone?: string; redirectTo?: string }) {
+  const config = getSupabaseConfig()
+  const email = input.email.trim().toLowerCase()
+  if (!email) throw new Error("Email is required to invite a user.")
+
+  const response = await fetch(`${config.url}/auth/v1/invite${input.redirectTo ? `?redirect_to=${encodeURIComponent(input.redirectTo)}` : ""}`, {
+    method: "POST",
+    headers: headers(config.serviceRoleKey, { "Content-Type": "application/json" }),
+    body: JSON.stringify({
+      email,
+      data: {
+        first_name: input.firstName ?? "",
+        last_name: input.lastName ?? "",
+        phone: input.phone ?? "",
+      },
+    }),
+  })
+
+  if (!response.ok) throw new Error(await response.text())
+
+  const payload = (await response.json().catch(() => ({}))) as { id?: string; user?: { id?: string } }
+  return upsertCommerceUser({
+    id: payload.user?.id ?? payload.id ?? crypto.randomUUID(),
+    email,
+    firstName: input.firstName?.trim() || "Invited",
+    lastName: input.lastName?.trim() || "User",
+    phone: input.phone?.trim() || "",
+  })
+}
+
 export async function getCommerceUserByEmail(email: string) {
   const response = await rest(`app_users?email=eq.${encodeURIComponent(email)}&select=*&limit=1`)
   const rows = (await response.json()) as Array<Record<string, unknown>>

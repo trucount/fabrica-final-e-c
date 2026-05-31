@@ -6,6 +6,8 @@ import "./globals.css"
 import { CartProvider } from "@/components/cart-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { ShippingTicker } from "@/components/shipping-ticker"
+import { SparrowChatbot } from "@/components/sparrow-chatbot"
+import Script from "next/script"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const playfair = Playfair_Display({
@@ -13,6 +15,8 @@ const playfair = Playfair_Display({
   variable: "--font-serif",
   weight: ["400", "500", "600", "700"],
 })
+
+const umamiWebsiteId = process.env.UMAMI_WEBSITE_ID ?? "c20d65b2-a78a-44f3-9d1b-62abfcb63d56"
 
 export const metadata: Metadata = {
   applicationName: "ASTERA",
@@ -79,9 +83,11 @@ export default function RootLayout({
         <CartProvider>
           <ShippingTicker />
           {children}
+          <SparrowChatbot />
           <Toaster />
         </CartProvider>
         <Analytics />
+        <Script defer src="https://cloud.umami.is/script.js" data-website-id={umamiWebsiteId} strategy="afterInteractive" />
       </body>
     </html>
   )
