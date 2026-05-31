@@ -10,13 +10,49 @@ import type { SiteContent } from "@/lib/site-content"
 
 type Message = { role: "user" | "assistant"; content: string }
 
-function renderMessage(content: string) {
-  const parts = content.split(/(https?:\/\/[^\s)]+)/g)
+function renderInlineMarkdown(text: string, keyPrefix: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\((?:https?:\/\/|mailto:)[^)]+\)|https?:\/\/[^\s)]+)/g)
+
   return parts.map((part, index) => {
-    if (/^https?:\/\//.test(part)) {
-      return <a key={`${part}-${index}`} href={part} target="_blank" rel="noreferrer" className="font-medium underline underline-offset-2">{part}</a>
+    const key = `${keyPrefix}-${index}`
+    const markdownLink = part.match(/^\[([^\]]+)\]\(((?:https?:\/\/|mailto:)[^)]+)\)$/)
+
+    if (markdownLink) {
+      const [, label, href] = markdownLink
+      const externalProps = href.startsWith("mailto:") ? {} : { target: "_blank", rel: "noreferrer" }
+      return <a key={key} href={href} className="font-medium underline underline-offset-2" {...externalProps}>{label}</a>
     }
-    return <span key={`${part}-${index}`}>{part}</span>
+
+    if (/^https?:\/\//.test(part)) {
+      return <a key={key} href={part} target="_blank" rel="noreferrer" className="font-medium underline underline-offset-2">{part}</a>
+    }
+
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={key} className="font-semibold">{part.slice(2, -2)}</strong>
+    }
+
+    return <span key={key}>{part}</span>
+  })
+}
+
+function renderMessage(content: string) {
+  return content.split("\n").map((line, index) => {
+    const listItem = line.match(/^\s*[-*]\s+(.+)$/)
+
+    if (!line.trim()) {
+      return <div key={`space-${index}`} className="h-2" />
+    }
+
+    if (listItem) {
+      return (
+        <div key={`line-${index}`} className="flex gap-2">
+          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
+          <span>{renderInlineMarkdown(listItem[1], `line-${index}`)}</span>
+        </div>
+      )
+    }
+
+    return <p key={`line-${index}`}>{renderInlineMarkdown(line, `line-${index}`)}</p>
   })
 }
 
@@ -89,7 +125,7 @@ export function SparrowChatbot() {
           <div className="flex-1 space-y-3 overflow-y-auto bg-secondary/30 p-4">
             {messages.map((message, index) => (
               <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed ${message.role === "user" ? "bg-foreground text-background" : "border bg-background text-foreground"}`}>
+                <div className={`max-w-[85%] space-y-1 rounded-2xl px-4 py-3 text-sm leading-relaxed ${message.role === "user" ? "bg-foreground text-background" : "border bg-background text-foreground"}`}>
                   {renderMessage(message.content)}
                 </div>
               </div>
