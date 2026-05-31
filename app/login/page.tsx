@@ -5,7 +5,8 @@ import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Header } from "@/components/header"
-import { Button } from "@/components/ui/button"\nimport { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { loginWithSupabase, requestPasswordReset } from "@/lib/client-commerce"
@@ -19,7 +20,8 @@ function LoginContent() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
-  const next = searchParams.get("next") || "/profile"\n  const googleLoginUrl = `/api/commerce/auth/social?provider=google&next=${encodeURIComponent(next)}`
+  const next = searchParams.get("next") || "/profile"
+  const googleLoginUrl = `/api/commerce/auth/social?provider=google&next=${encodeURIComponent(next)}`
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
