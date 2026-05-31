@@ -16,6 +16,8 @@ const playfair = Playfair_Display({
   weight: ["400", "500", "600", "700"],
 })
 
+const umamiWebsiteId = process.env.UMAMI_WEBSITE_ID ?? "c20d65b2-a78a-44f3-9d1b-62abfcb63d56"
+
 export const metadata: Metadata = {
   applicationName: "ASTERA",
   title: {
@@ -85,7 +87,7 @@ export default function RootLayout({
           <Toaster />
         </CartProvider>
         <Analytics />
-        <Script defer src="https://cloud.umami.is/script.js" data-website-id="c20d65b2-a78a-44f3-9d1b-62abfcb63d56" strategy="afterInteractive" />
+        <Script defer src="https://cloud.umami.is/script.js" data-website-id={umamiWebsiteId} strategy="afterInteractive" />
       </body>
     </html>
   )
