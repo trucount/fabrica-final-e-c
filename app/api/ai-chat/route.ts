@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server"
 import { getAboutContent } from "@/lib/about-content"
-import { getCollections } from "@/lib/collections-data"
-import { getHomeContent } from "@/lib/home-content"
 import { getInfoPageContent, INFO_PAGE_SLUGS } from "@/lib/info-page-content"
-import { getProducts } from "@/lib/products-data"
 import { getSiteContent } from "@/lib/site-content"
 
 const MODELS = [
@@ -20,11 +17,8 @@ type StoreContext = Awaited<ReturnType<typeof loadStoreContext>>
 function flattenContext(data: StoreContext) {
   const lines = [
     `Business: ${data.site.brandName}`,
-    `Home: ${data.home.heroTitle}. ${data.home.heroSubtitle}. ${data.home.footerTagline}`,
     `About: ${data.about.heroTitle}. ${data.about.heroSubtitle}. ${data.about.storyTitle}: ${data.about.storyParagraphs.join(" ")}`,
     `About values: ${data.about.values.map((value) => `${value.title}: ${value.description}`).join(" | ")}`,
-    `Collections: ${data.collections.map((collection) => `${collection.name}: ${collection.description}`).join(" | ")}`,
-    `Products: ${data.products.map((product) => `${product.name} (${product.category}, ${product.price}): ${product.description}`).join(" | ")}`,
     ...data.pages.map(({ slug, content }) => `${slug}: ${content.title}. ${content.description}. ${content.body.join(" ")}${content.contact ? ` Contact links: Instagram ${content.contact.instagram}, WhatsApp ${content.contact.whatsapp}, Facebook ${content.contact.facebook}, phone ${content.contact.phone}, email ${content.contact.email}.` : ""}`),
   ]
 
@@ -32,23 +26,20 @@ function flattenContext(data: StoreContext) {
 }
 
 async function loadStoreContext() {
-  const [site, home, about, collections, products, pages] = await Promise.all([
+  const [site, about, pages] = await Promise.all([
     getSiteContent(),
-    getHomeContent(),
     getAboutContent(),
-    getCollections(),
-    getProducts({ includeInactive: false }),
     Promise.all(INFO_PAGE_SLUGS.map(async (slug) => ({ slug, content: await getInfoPageContent(slug) }))),
   ])
 
-  return { site, home, about, collections, products, pages }
+  return { site, about, pages }
 }
 
 async function askOpenRouter(messages: ChatMessage[], context: string) {
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured.")
 
-  const system = `You are SPARROW, the helpful ecommerce assistant. Use only the store context below. Format replies clearly with short paragraphs, bullets, and markdown links when contact URLs are relevant. If a fact is not in context, say you can help connect the customer to support.\n\nSTORE CONTEXT:\n${context}`
+  const system = `You are the helpful ecommerce assistant for this business. Use only the store context below. Format replies clearly with short paragraphs, bullets, and markdown links when contact URLs are relevant. Only answer questions about about information, policies, shipping, returns, privacy, terms, and contact options. Do not answer product or catalog questions; instead, say you can help with store information and contact options.\n\nSTORE CONTEXT:\n${context}`
   let lastError = "OpenRouter request failed."
 
   for (const model of MODELS) {
@@ -58,7 +49,7 @@ async function askOpenRouter(messages: ChatMessage[], context: string) {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-        "X-Title": "SPARROW ecommerce assistant",
+        "X-Title": "Store information assistant",
       },
       body: JSON.stringify({
         model,
@@ -86,6 +77,6 @@ export async function POST(request: Request) {
     const context = flattenContext(await loadStoreContext())
     return NextResponse.json(await askOpenRouter(safeMessages, context))
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "SPARROW is unavailable right now." }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : "The assistant is unavailable right now." }, { status: 500 })
   }
 }
