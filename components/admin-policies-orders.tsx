@@ -23,6 +23,7 @@ import {
   persistPolicies,
 } from "@/lib/client-commerce"
 import { Plus, Save, Trash2 } from "lucide-react"
+import { generateOrdersExcel, downloadExcel } from "@/lib/excel-generator"
 
 export function AdminPoliciesPanel() {
   const { toast } = useToast()
@@ -199,28 +200,10 @@ export function AdminOrdersPanel() {
   })
 
   const exportExcel = () => {
-    const header = ["Order", "Customer", "Date", "Total", "Payment", "Verified", "Status", "Items", "Shipping"]
-    const rows = filteredOrders.map((order) => [
-      order.id,
-      order.userEmail,
-      new Date(order.date).toLocaleString(),
-      order.totals.total,
-      order.paymentMethod,
-      order.paymentVerified ? "Verified" : "Pending",
-      order.status,
-      order.items.map((item) => `${item.name} (${item.size}) x ${item.quantity}`).join("; "),
-      `${order.shipping.firstName} ${order.shipping.lastName}, ${order.shipping.address}, ${order.shipping.city}, ${order.shipping.state} ${order.shipping.zipCode}`,
-    ])
-    const escapeCell = (value: string | number | boolean) => `"${String(value).replace(/"/g, '""')}"`
-    const csv = [header, ...rows].map((row) => row.map(escapeCell).join(",")).join("\n")
-    const url = URL.createObjectURL(new Blob([csv], { type: "application/vnd.ms-excel;charset=utf-8" }))
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `orders-${new Date().toISOString().slice(0, 10)}.xls`
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
+    const excelData = generateOrdersExcel(filteredOrders)
+    const filename = `orders-${new Date().toISOString().slice(0, 10)}.csv`
+    downloadExcel(excelData, filename)
+    toast({ title: "Export successful", description: `Downloaded ${filteredOrders.length} orders to ${filename}` })
   }
 
   const updateStatus = async (id: string, status: OrderStatus) => {
