@@ -35,7 +35,7 @@ export async function loginToAdmin(formData: FormData) {
     httpOnly: true,
     sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
-    path: "/admin",
+    path: "/",
   })
 
   redirect("/admin")
