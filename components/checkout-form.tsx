@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
@@ -112,6 +112,7 @@ export function CheckoutForm({ policies, totals, onShippingRateChange }: { polic
   const [isLoadingRates, setIsLoadingRates] = useState(false)
   const [ratesError, setRatesError] = useState("")
   const user = getCurrentUser()
+  const shippingRateItemsKey = useMemo(() => items.map((item) => `${item.id}:${item.size}:${item.quantity}`).join("|"), [items])
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -140,6 +141,7 @@ export function CheckoutForm({ policies, totals, onShippingRateChange }: { polic
 
   useEffect(() => {
     if (!policies.automaticShippingEnabled) {
+      setIsLoadingRates(false)
       setShippingRates([])
       setSelectedShippingRateId("")
       setRatesError("")
@@ -148,6 +150,7 @@ export function CheckoutForm({ policies, totals, onShippingRateChange }: { polic
     }
 
     if (!hasCompleteShippingAddress || !items.length) {
+      setIsLoadingRates(false)
       setShippingRates([])
       setSelectedShippingRateId("")
       onShippingRateChange(undefined)
@@ -162,7 +165,7 @@ export function CheckoutForm({ policies, totals, onShippingRateChange }: { polic
         .then((rates) => {
           if (cancelled) return
           setShippingRates(rates)
-          const selectedRate = rates.find((rate) => rate.id === selectedShippingRateId) ?? rates[0]
+          const selectedRate = rates[0]
           setSelectedShippingRateId(selectedRate?.id ?? "")
           onShippingRateChange(selectedRate)
           setRatesError(rates.length ? "" : "No delivery options were returned for this address.")
@@ -183,7 +186,7 @@ export function CheckoutForm({ policies, totals, onShippingRateChange }: { polic
       cancelled = true
       window.clearTimeout(timeout)
     }
-  }, [formData, hasCompleteShippingAddress, items, onShippingRateChange, policies.automaticShippingEnabled, selectedShippingRateId, user?.email])
+  }, [formData, hasCompleteShippingAddress, onShippingRateChange, policies.automaticShippingEnabled, shippingRateItemsKey, user?.email])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedAddressId("new")
@@ -294,7 +297,7 @@ export function CheckoutForm({ policies, totals, onShippingRateChange }: { polic
         <div>
           <h2 className="font-serif text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">Delivery Options</h2>
           {!hasCompleteShippingAddress ? <p className="text-sm text-muted-foreground">Enter your full shipping address to see live Shippo delivery options.</p> : null}
-          {isLoadingRates ? <p className="text-sm text-muted-foreground">Loading delivery options...</p> : null}
+          {isLoadingRates && !shippingRates.length ? <p className="text-sm text-muted-foreground">Loading delivery options...</p> : null}
           {ratesError ? <p className="text-sm text-destructive">{ratesError}</p> : null}
           <div className="grid gap-3">
             {shippingRates.map((rate) => (
@@ -320,7 +323,7 @@ export function CheckoutForm({ policies, totals, onShippingRateChange }: { polic
       </div>
 
       <div className="border-t border-border pt-4 sm:pt-6">
-        <Button type="submit" size="lg" className="w-full h-12 sm:h-14 text-sm sm:text-base" disabled={isProcessing || isLoadingRates || (policies.automaticShippingEnabled && !totals.shippingOption)}>
+        <Button type="submit" size="lg" className="w-full h-12 sm:h-14 text-sm sm:text-base" disabled={isProcessing || (isLoadingRates && !totals.shippingOption) || (policies.automaticShippingEnabled && !totals.shippingOption)}>
           <Lock className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
           {isProcessing ? "Placing Order..." : `Place Order - ${formatCurrency(totals.total)}`}
         </Button>
