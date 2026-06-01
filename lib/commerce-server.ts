@@ -54,8 +54,12 @@ function numberValue(value: unknown, fallback = 0) {
 function requireString(value: unknown, fallback = "") {
   return typeof value === "string" ? value : fallback
 }
-function requireBoolean(value: unknown, fallback = false) {
-  return typeof value === "boolean" ? value : fallback
+function requireBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === "boolean") return value
+  if (value === "true" || value === "1") return true
+  if (value === "false" || value === "0") return false
+  if (typeof value === "number") return value !== 0
+  return fallback
 }
 
 function validShippoLabelFileType(value: unknown): ShippoLabelFileType {
@@ -369,13 +373,12 @@ async function rest(path: string, init: RequestInit = {}) {
 
 export async function getCommercePolicies(): Promise<OrderPolicies> {
   const [policyResponse, couponsResponse] = await Promise.all([
-    rest("order_policies?id=eq.true&select=*&limit=1"),
+    rest("order_policies?select=*&limit=1"),
     rest("coupons?select=*&order=created_at.asc"),
   ])
   const policyRows = (await policyResponse.json()) as Array<Record<string, unknown>>
   const couponRows = (await couponsResponse.json()) as Array<Record<string, unknown>>
-  const policy = policyRows[0] ?? {}
-
+    const policy = policyRows[0] ?? {}
   return {
     shippingAmount: numberValue(policy.shipping_amount, 15),
     freeShippingThreshold: numberValue(policy.free_shipping_threshold, 200),
@@ -408,7 +411,7 @@ export async function getCommercePolicies(): Promise<OrderPolicies> {
 }
 
 export async function saveCommercePolicies(policies: OrderPolicies) {
-  await rest("order_policies", {
+  await rest("order_policies?on_conflict=id", {
     method: "POST",
     headers: { "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
     body: JSON.stringify({
