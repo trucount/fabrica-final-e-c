@@ -53,4 +53,4 @@ Run the updated `supabase/all-commerce.sql` once so the Shippo policy columns ex
 SHIPPO_API_KEY=your-shippo-api-token
 ```
 
-After that, configure the sender address, parcel defaults, and label format in **Admin > Policies > Shippo Settings**. You can use a `shippo_test_...` key for Shippo test mode; Shippo test labels are sample labels and are not valid for mailing.
+After that, configure the sender address, parcel defaults, and label format in **Admin > Policies > Shippo Settings**. If Shippo cannot return carrier rates for a typed checkout address, checkout falls back to the policy **Shipping amount per order** as a store-arranged delivery option so customers can still complete online payment while automatic shipping is enabled. You can use a `shippo_test_...` key for Shippo test mode; Shippo test labels are sample labels and are not valid for mailing.

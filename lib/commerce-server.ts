@@ -111,6 +111,7 @@ function mapShippingRate(row: Record<string, unknown>): ShippingRateOption {
     currency: requireString(row.currency, "INR"),
     estimatedDays: row.estimatedDays === undefined || row.estimatedDays === null ? undefined : numberValue(row.estimatedDays),
     durationTerms: requireString(row.durationTerms) || undefined,
+    fallback: Boolean(row.fallback),
   }
 }
 
@@ -268,6 +269,24 @@ async function shippoFetch<T>(path: string, init: RequestInit) {
   return response.json() as Promise<T>
 }
 
+
+function defaultShippingRate(policies: OrderPolicies, reason?: string): ShippingRateOption {
+  return {
+    id: "default-shipping",
+    provider: "Default shipping",
+    serviceLevel: "Store-arranged delivery",
+    amount: Math.max(0, policies.shippingAmount),
+    currency: "INR",
+    durationTerms: reason || "Shippo did not return carrier rates for this address, so the store default shipping charge will be used.",
+    fallback: true,
+  }
+}
+
+function shouldUseFallbackRate(error: Error) {
+  const message = error.message.toLowerCase()
+  return !message.includes("shippo is not configured") && !message.includes("sender address is incomplete")
+}
+
 function mapShippoRate(rate: Record<string, unknown>): ShippingRateOption {
   const servicelevel = isRecord(rate.servicelevel) ? rate.servicelevel : {}
   return {
@@ -285,18 +304,28 @@ export async function getShippoShippingRates(address: SavedAddress, items: CartI
   const policies = await getCommercePolicies()
   if (!policies.automaticShippingEnabled) return []
 
-  const shipment = await shippoFetch<{ rates?: unknown[]; messages?: unknown[] }>("shipments/", {
-    method: "POST",
-    body: JSON.stringify({
-      address_from: shippoFromAddress(policies),
-      address_to: addressToShippo(address, userEmail),
-      parcels: [defaultParcel(policies, items)],
-      async: false,
-    }),
-  })
+  try {
+    const shipment = await shippoFetch<{ rates?: unknown[]; messages?: unknown[] }>("shipments/", {
+      method: "POST",
+      body: JSON.stringify({
+        address_from: shippoFromAddress(policies),
+        address_to: addressToShippo(address, userEmail),
+        parcels: [defaultParcel(policies, items)],
+        async: false,
+      }),
+    })
 
-  const rates = Array.isArray(shipment.rates) ? shipment.rates.filter(isRecord).map(mapShippoRate) : []
-  return rates.sort((a, b) => a.amount - b.amount)
+    const rates = Array.isArray(shipment.rates) ? shipment.rates.filter(isRecord).map(mapShippoRate) : []
+    if (rates.length) return rates.sort((a, b) => a.amount - b.amount)
+
+    return [defaultShippingRate(policies)]
+  } catch (error) {
+    if (error instanceof Error && shouldUseFallbackRate(error)) {
+      return [defaultShippingRate(policies, "Shippo could not quote carrier rates for this address, so the store default shipping charge will be used.")]
+    }
+
+    throw error
+  }
 }
 
 async function createShippoTransaction(rateId: string, policies: OrderPolicies): Promise<ShippingLabel> {
@@ -476,7 +505,7 @@ export async function createCommerceOrder(order: CustomerOrder, userId?: string)
   const [resolvedUserId, resolvedCouponCode, shippingLabel] = await Promise.all([
     resolveOrderUserId(order.userEmail, userId),
     resolveOrderCouponCode(order.totals.coupon?.code),
-    policies.automaticShippingEnabled && order.paymentVerified && order.totals.shippingOption ? createShippoTransaction(order.totals.shippingOption.id, policies) : Promise.resolve(undefined),
+    policies.automaticShippingEnabled && order.paymentVerified && order.totals.shippingOption && !order.totals.shippingOption.fallback ? createShippoTransaction(order.totals.shippingOption.id, policies) : Promise.resolve(undefined),
   ])
 
   await rest("orders", {

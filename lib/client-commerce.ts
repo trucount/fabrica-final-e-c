@@ -81,6 +81,7 @@ export type ShippingRateOption = {
   currency: string
   estimatedDays?: number
   durationTerms?: string
+  fallback?: boolean
 }
 
 export type ShippingLabel = {
