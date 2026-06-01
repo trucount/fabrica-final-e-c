@@ -355,7 +355,7 @@ on conflict (id) do update
 set shipping_amount = excluded.shipping_amount,
     free_shipping_threshold = excluded.free_shipping_threshold,
     tax_rate = excluded.tax_rate,
-    automatic_shipping_enabled = public.order_policies.automatic_shipping_enabled,
+    automatic_shipping_enabled = excluded.automatic_shipping_enabled,
     updated_at = excluded.updated_at;
 
 create table if not exists public.coupons (

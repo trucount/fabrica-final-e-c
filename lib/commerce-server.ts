@@ -87,7 +87,7 @@ function mapAddress(row: Record<string, unknown>): SavedAddress {
     state: requireString(row.state),
     zipCode: requireString(row.zip_code),
     country: requireString(row.country, "India"),
-    isDefault: Boolean(row.is_default),
+    isDefault: requireBoolean(row.is_default, false),
   }
 }
 
@@ -98,7 +98,7 @@ function mapCoupon(row: Record<string, unknown>): Coupon {
     type: requireString(row.coupon_type) === "one_time" ? "one_time" : "universal",
     discountType: requireString(row.discount_type) === "amount" ? "amount" : "percent",
     discountValue: numberValue(row.discount_value),
-    active: Boolean(row.active),
+    active: requireBoolean(row.active, true),
   }
 }
 
@@ -111,7 +111,7 @@ function mapShippingRate(row: Record<string, unknown>): ShippingRateOption {
     currency: requireString(row.currency, "INR"),
     estimatedDays: row.estimatedDays === undefined || row.estimatedDays === null ? undefined : numberValue(row.estimatedDays),
     durationTerms: requireString(row.durationTerms) || undefined,
-    fallback: Boolean(row.fallback),
+    fallback: requireBoolean(row.fallback, false),
   }
 }
 
@@ -155,11 +155,11 @@ function mapOrder(row: Record<string, unknown>): CustomerOrder {
       state: requireString(shipping.state),
       zipCode: requireString(shipping.zipCode),
       country: requireString(shipping.country, "India"),
-      isDefault: Boolean(shipping.isDefault),
+      isDefault: requireBoolean(shipping.isDefault, false),
     },
     status: requireString(row.status, "placed") as OrderStatus,
     paymentMethod: requireString(row.payment_method) === "razorpay" ? "razorpay" : "cod",
-    paymentVerified: Boolean(row.payment_verified),
+    paymentVerified: requireBoolean(row.payment_verified, false),
     razorpayPaymentId: requireString(row.razorpay_payment_id) || undefined,
     totals: {
       subtotal: numberValue(totals.subtotal),
@@ -380,7 +380,7 @@ export async function getCommercePolicies(): Promise<OrderPolicies> {
     shippingAmount: numberValue(policy.shipping_amount, 15),
     freeShippingThreshold: numberValue(policy.free_shipping_threshold, 200),
     taxRate: numberValue(policy.tax_rate, 8),
-    automaticShippingEnabled: Boolean(policy.automatic_shipping_enabled),
+    automaticShippingEnabled: requireBoolean(policy.automatic_shipping_enabled, false),
     shippoFromAddress: {
       name: requireString(policy.shippo_from_name, emptyPolicies.shippoFromAddress.name),
       company: requireString(policy.shippo_from_company, emptyPolicies.shippoFromAddress.company),
