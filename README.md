@@ -1,4 +1,4 @@
-# E-commerce 
+# E-commerce site
 ## Environment variables
 
 Add these variables in Vercel (or your local `.env.local`) for the SPARROW chatbot, Supabase commerce features, and Umami analytics.
