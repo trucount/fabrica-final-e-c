@@ -270,6 +270,5 @@ export default function CartPage() {
           <p className="text-xs tracking-widest text-muted-foreground uppercase">Powered by Sparrow AI Solutions</p>
         </footer>
       </div>
-    </div>
   )
 }
