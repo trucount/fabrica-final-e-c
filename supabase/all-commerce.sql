@@ -306,15 +306,56 @@ create table if not exists public.order_policies (
   shipping_amount numeric(10, 2) not null default 15 check (shipping_amount >= 0),
   free_shipping_threshold numeric(10, 2) not null default 200 check (free_shipping_threshold >= 0),
   tax_rate numeric(5, 2) not null default 8 check (tax_rate >= 0),
+  automatic_shipping_enabled boolean not null default false,
+  shippo_from_name text not null default '',
+  shippo_from_company text not null default '',
+  shippo_from_street1 text not null default '',
+  shippo_from_street2 text not null default '',
+  shippo_from_city text not null default '',
+  shippo_from_state text not null default '',
+  shippo_from_zip text not null default '',
+  shippo_from_country text not null default 'IN',
+  shippo_from_phone text not null default '',
+  shippo_from_email text not null default '',
+  shippo_from_is_residential boolean not null default false,
+  shippo_parcel_length numeric(10, 2) not null default 10 check (shippo_parcel_length > 0),
+  shippo_parcel_width numeric(10, 2) not null default 10 check (shippo_parcel_width > 0),
+  shippo_parcel_height numeric(10, 2) not null default 4 check (shippo_parcel_height > 0),
+  shippo_parcel_weight numeric(10, 2) not null default 1 check (shippo_parcel_weight > 0),
+  shippo_parcel_distance_unit text not null default 'in' check (shippo_parcel_distance_unit in ('in', 'cm')),
+  shippo_parcel_mass_unit text not null default 'lb' check (shippo_parcel_mass_unit in ('lb', 'oz', 'g', 'kg')),
+  shippo_label_file_type text not null default 'PDF_4x6' check (shippo_label_file_type in ('PNG', 'PNG_2.3x7.5', 'PDF', 'PDF_2.3x7.5', 'PDF_4x6', 'PDF_4x8', 'PDF_A4', 'PDF_A5', 'PDF_A6', 'ZPLII')),
   updated_at timestamptz not null default now()
 );
 
-insert into public.order_policies (id, shipping_amount, free_shipping_threshold, tax_rate, updated_at)
-values (true, 15, 200, 8, now())
+alter table public.order_policies
+  add column if not exists automatic_shipping_enabled boolean not null default false,
+  add column if not exists shippo_from_name text not null default '',
+  add column if not exists shippo_from_company text not null default '',
+  add column if not exists shippo_from_street1 text not null default '',
+  add column if not exists shippo_from_street2 text not null default '',
+  add column if not exists shippo_from_city text not null default '',
+  add column if not exists shippo_from_state text not null default '',
+  add column if not exists shippo_from_zip text not null default '',
+  add column if not exists shippo_from_country text not null default 'IN',
+  add column if not exists shippo_from_phone text not null default '',
+  add column if not exists shippo_from_email text not null default '',
+  add column if not exists shippo_from_is_residential boolean not null default false,
+  add column if not exists shippo_parcel_length numeric(10, 2) not null default 10,
+  add column if not exists shippo_parcel_width numeric(10, 2) not null default 10,
+  add column if not exists shippo_parcel_height numeric(10, 2) not null default 4,
+  add column if not exists shippo_parcel_weight numeric(10, 2) not null default 1,
+  add column if not exists shippo_parcel_distance_unit text not null default 'in',
+  add column if not exists shippo_parcel_mass_unit text not null default 'lb',
+  add column if not exists shippo_label_file_type text not null default 'PDF_4x6';
+
+insert into public.order_policies (id, shipping_amount, free_shipping_threshold, tax_rate, automatic_shipping_enabled, updated_at)
+values (true, 15, 200, 8, false, now())
 on conflict (id) do update
 set shipping_amount = excluded.shipping_amount,
     free_shipping_threshold = excluded.free_shipping_threshold,
     tax_rate = excluded.tax_rate,
+    automatic_shipping_enabled = excluded.automatic_shipping_enabled,
     updated_at = excluded.updated_at;
 
 create table if not exists public.coupons (

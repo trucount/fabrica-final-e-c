@@ -10,7 +10,7 @@ import { ArrowLeft } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { formatCurrency } from "@/lib/currency"
-import { calculateTotals, emptyPolicies, getCurrentUser, loadPolicies } from "@/lib/client-commerce"
+import { calculateTotals, emptyPolicies, getCurrentUser, loadPolicies, type ShippingRateOption } from "@/lib/client-commerce"
 
 export default function CheckoutPage() {
   const { items, total } = useCart()
@@ -18,8 +18,9 @@ export default function CheckoutPage() {
   const [ready, setReady] = useState(false)
   const [policies, setPolicies] = useState(emptyPolicies)
   const [policiesError, setPoliciesError] = useState("")
+  const [selectedShippingRate, setSelectedShippingRate] = useState<ShippingRateOption | undefined>()
   const couponCode = typeof window !== "undefined" ? localStorage.getItem("appliedCouponCode") ?? undefined : undefined
-  const totals = calculateTotals(total, policies, couponCode)
+  const totals = calculateTotals(total, policies, couponCode, selectedShippingRate)
 
   useEffect(() => {
     if (!getCurrentUser()) {
@@ -56,7 +57,7 @@ export default function CheckoutPage() {
         <Button variant="ghost" asChild className="mb-4"><Link href="/cart"><ArrowLeft className="h-4 w-4 mr-2" />Back to Cart</Link></Button>
         <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold mb-6 sm:mb-8">Checkout</h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
-          <div className="order-2 lg:order-1"><CheckoutForm totals={totals} /></div>
+          <div className="order-2 lg:order-1"><CheckoutForm policies={policies} totals={totals} onShippingRateChange={setSelectedShippingRate} /></div>
           <div className="order-1 lg:order-2">
             <div className="border border-border p-4 sm:p-6 lg:sticky lg:top-24 rounded-none">
               <h2 className="font-serif text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Order Summary</h2>
@@ -71,7 +72,7 @@ export default function CheckoutPage() {
               <div className="border-t border-border pt-3 sm:pt-4 space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span className="font-medium">{formatCurrency(totals.subtotal)}</span></div>
                 {totals.discount ? <div className="flex justify-between text-sm text-green-600"><span>Discount</span><span className="font-medium">-{formatCurrency(totals.discount)}</span></div> : null}
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Shipping</span><span className="font-medium">{totals.shipping === 0 ? "Free" : formatCurrency(totals.shipping)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Shipping</span><span className="font-medium">{policies.automaticShippingEnabled ? (selectedShippingRate ? formatCurrency(totals.shipping) : "Select at checkout") : totals.shipping === 0 ? "Free" : formatCurrency(totals.shipping)}</span></div>
                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tax</span><span className="font-medium">{formatCurrency(totals.tax)}</span></div>
               </div>
               <div className="border-t border-border pt-3 sm:pt-4"><div className="flex justify-between font-serif text-lg sm:text-xl font-semibold"><span>Total</span><span>{formatCurrency(totals.total)}</span></div></div>

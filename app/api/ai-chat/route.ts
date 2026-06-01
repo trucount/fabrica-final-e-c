@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getAboutContent } from "@/lib/about-content"
 import { getInfoPageContent, INFO_PAGE_SLUGS } from "@/lib/info-page-content"
 import { getSiteContent } from "@/lib/site-content"
+import { getCommercePolicies } from "@/lib/commerce-server"
 
 const MODELS = [
   "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
@@ -20,19 +21,21 @@ function flattenContext(data: StoreContext) {
     `About: ${data.about.heroTitle}. ${data.about.heroSubtitle}. ${data.about.storyTitle}: ${data.about.storyParagraphs.join(" ")}`,
     `About values: ${data.about.values.map((value) => `${value.title}: ${value.description}`).join(" | ")}`,
     ...data.pages.map(({ slug, content }) => `${slug}: ${content.title}. ${content.description}. ${content.body.join(" ")}${content.contact ? ` Contact links: Instagram ${content.contact.instagram}, WhatsApp ${content.contact.whatsapp}, Facebook ${content.contact.facebook}, phone ${content.contact.phone}, email ${content.contact.email}.` : ""}`),
+    `Shipping policy: Automatic shipping ${data.policies.automaticShippingEnabled ? "is ENABLED" : "is DISABLED"}. ${data.policies.automaticShippingEnabled ? "Uses Shippo carrier rates. Cash on Delivery is not available." : `Default shipping charge is ₹${data.policies.shippingAmount}. Free shipping on orders over ₹${data.policies.freeShippingThreshold}. Cash on Delivery is available.`}`,
   ]
 
   return lines.join("\n")
 }
 
 async function loadStoreContext() {
-  const [site, about, pages] = await Promise.all([
+  const [site, about, pages, policies] = await Promise.all([
     getSiteContent(),
     getAboutContent(),
     Promise.all(INFO_PAGE_SLUGS.map(async (slug) => ({ slug, content: await getInfoPageContent(slug) }))),
+    getCommercePolicies(),
   ])
 
-  return { site, about, pages }
+  return { site, about, pages, policies }
 }
 
 async function askOpenRouter(messages: ChatMessage[], context: string) {

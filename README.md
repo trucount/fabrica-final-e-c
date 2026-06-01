@@ -44,3 +44,13 @@ NEXT_PUBLIC_UMAMI_SHARE_URL=https://cloud.umami.is/share/your-share-token/your-s
 ```
 
 This is optional. If provided, Admin > Analytics embeds your shared Umami dashboard in addition to the API-powered graphs.
+
+### Required for automatic Shippo shipping
+
+Run the updated `supabase/all-commerce.sql` once so the Shippo policy columns exist, then add your Shippo server-side API key:
+
+```env
+SHIPPO_API_KEY=your-shippo-api-token
+```
+
+After that, configure the sender address, parcel defaults, and label format in **Admin > Policies > Shippo Settings**. If Shippo cannot return carrier rates for a typed checkout address, checkout falls back to the policy **Shipping amount per order** as a store-arranged delivery option so customers can still complete online payment while automatic shipping is enabled. You can use a `shippo_test_...` key for Shippo test mode; Shippo test labels are sample labels and are not valid for mailing.
