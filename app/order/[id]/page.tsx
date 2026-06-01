@@ -43,8 +43,12 @@ export default function OrderDetailsPage() {
     if (printWindow) {
       printWindow.document.write(htmlContent)
       printWindow.document.close()
+      // Use the window's own print dialog which usually has a "Save as PDF" option
+      // To force download without asking, we'd need a library like jsPDF or html2pdf
+      // But we can trigger the print dialog immediately.
       printWindow.print()
-      setTimeout(() => printWindow.close(), 250)
+      // Auto-close after a delay to allow print dialog to initialize
+      setTimeout(() => printWindow.close(), 500)
     }
   }
 
@@ -148,6 +152,9 @@ export default function OrderDetailsPage() {
           </div>
         </section>
       </main>
+      <footer className="mt-12 pb-8 text-center print:hidden">
+        <p className="text-xs tracking-widest text-muted-foreground uppercase">Powered by Sparrow AI Solutions</p>
+      </footer>
     </div>
   )
 }

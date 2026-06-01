@@ -79,6 +79,10 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+        <footer className="mt-12 pb-8 text-center">
+          <p className="text-xs tracking-widest text-muted-foreground uppercase">Powered by Sparrow AI Solutions</p>
+        </footer>
+      </div>
     </div>
   )
 }
