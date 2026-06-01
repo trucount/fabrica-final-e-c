@@ -1,5 +1,5 @@
 import type { CartItem } from "@/components/cart-provider"
-import type { CommerceUser, Coupon, CustomerOrder, OrderPolicies, OrderStatus, SavedAddress, ShippingLabel, ShippingRateOption } from "@/lib/client-commerce"
+import { emptyPolicies, type CommerceUser, type Coupon, type CustomerOrder, type OrderPolicies, type OrderStatus, type SavedAddress, type ShippingLabel, type ShippingRateOption, type ShippoLabelFileType } from "@/lib/client-commerce"
 
 export type SupabaseSocialProvider = "clerk" | "google" | "github"
 
@@ -54,6 +54,15 @@ function numberValue(value: unknown, fallback = 0) {
 function requireString(value: unknown, fallback = "") {
   return typeof value === "string" ? value : fallback
 }
+function requireBoolean(value: unknown, fallback = false) {
+  return typeof value === "boolean" ? value : fallback
+}
+
+function validShippoLabelFileType(value: unknown): ShippoLabelFileType {
+  const allowed: ShippoLabelFileType[] = ["PNG", "PNG_2.3x7.5", "PDF", "PDF_2.3x7.5", "PDF_4x6", "PDF_4x8", "PDF_A4", "PDF_A5", "PDF_A6", "ZPLII"]
+  return allowed.includes(value as ShippoLabelFileType) ? value as ShippoLabelFileType : emptyPolicies.shippoLabelFileType
+}
+
 
 function mapUser(row: Record<string, unknown>): CommerceUser {
   return {
@@ -177,33 +186,37 @@ function countryCode(country: string) {
   return countries[normalized] ?? country.trim().toUpperCase()
 }
 
-function shippoFromAddress() {
-  const name = process.env.SHIPPO_FROM_NAME
-  const street1 = process.env.SHIPPO_FROM_STREET1
-  const city = process.env.SHIPPO_FROM_CITY
-  const state = process.env.SHIPPO_FROM_STATE
-  const zip = process.env.SHIPPO_FROM_ZIP
-  const country = process.env.SHIPPO_FROM_COUNTRY
-  const phone = process.env.SHIPPO_FROM_PHONE
-  const email = process.env.SHIPPO_FROM_EMAIL
-
-  const missing = Object.entries({ SHIPPO_FROM_NAME: name, SHIPPO_FROM_STREET1: street1, SHIPPO_FROM_CITY: city, SHIPPO_FROM_STATE: state, SHIPPO_FROM_ZIP: zip, SHIPPO_FROM_COUNTRY: country, SHIPPO_FROM_PHONE: phone, SHIPPO_FROM_EMAIL: email })
-    .filter(([, value]) => !value)
-    .map(([key]) => key)
+function shippoFromAddress(policies: OrderPolicies) {
+  const from = policies.shippoFromAddress
+  const missing = [
+    ["sender name", from.name],
+    ["sender street", from.street1],
+    ["sender city", from.city],
+    ["sender state", from.state],
+    ["sender postal code", from.zip],
+    ["sender country", from.country],
+    ["sender phone", from.phone],
+    ["sender email", from.email],
+  ]
+    .filter(([, value]) => !String(value ?? "").trim())
+    .map(([label]) => label)
 
   if (missing.length) {
-    throw new Error(`Shippo sender address is incomplete. Add ${missing.join(", ")} to your environment.`)
+    throw new Error(`Shippo sender address is incomplete. Update Admin > Policies with ${missing.join(", ")}.`)
   }
 
   return {
-    name,
-    street1,
-    city,
-    state,
-    zip,
-    country: countryCode(country ?? ""),
-    phone,
-    email,
+    name: from.name,
+    company: from.company || undefined,
+    street1: from.street1,
+    street2: from.street2 || undefined,
+    city: from.city,
+    state: from.state,
+    zip: from.zip,
+    country: countryCode(from.country),
+    phone: from.phone,
+    email: from.email,
+    is_residential: from.isResidential,
   }
 }
 
@@ -221,17 +234,17 @@ function addressToShippo(address: SavedAddress, email?: string) {
   }
 }
 
-function defaultParcel(items: CartItem[]) {
-  const weightPerItem = Number(process.env.SHIPPO_PARCEL_WEIGHT_LB ?? "1")
+function defaultParcel(policies: OrderPolicies, items: CartItem[]) {
+  const parcel = policies.shippoParcelDefaults
   const quantity = Math.max(1, items.reduce((sum, item) => sum + item.quantity, 0))
 
   return {
-    length: process.env.SHIPPO_PARCEL_LENGTH_IN ?? "10",
-    width: process.env.SHIPPO_PARCEL_WIDTH_IN ?? "10",
-    height: process.env.SHIPPO_PARCEL_HEIGHT_IN ?? "4",
-    distance_unit: "in",
-    weight: String(Math.max(0.1, weightPerItem * quantity)),
-    mass_unit: "lb",
+    length: String(Math.max(0.1, parcel.length)),
+    width: String(Math.max(0.1, parcel.width)),
+    height: String(Math.max(0.1, parcel.height)),
+    distance_unit: parcel.distanceUnit,
+    weight: String(Math.max(0.1, parcel.weight * quantity)),
+    mass_unit: parcel.massUnit,
   }
 }
 
@@ -275,9 +288,9 @@ export async function getShippoShippingRates(address: SavedAddress, items: CartI
   const shipment = await shippoFetch<{ rates?: unknown[]; messages?: unknown[] }>("shipments/", {
     method: "POST",
     body: JSON.stringify({
-      address_from: shippoFromAddress(),
+      address_from: shippoFromAddress(policies),
       address_to: addressToShippo(address, userEmail),
-      parcels: [defaultParcel(items)],
+      parcels: [defaultParcel(policies, items)],
       async: false,
     }),
   })
@@ -286,10 +299,10 @@ export async function getShippoShippingRates(address: SavedAddress, items: CartI
   return rates.sort((a, b) => a.amount - b.amount)
 }
 
-async function createShippoTransaction(rateId: string): Promise<ShippingLabel> {
+async function createShippoTransaction(rateId: string, policies: OrderPolicies): Promise<ShippingLabel> {
   const transaction = await shippoFetch<Record<string, unknown>>("transactions", {
     method: "POST",
-    body: JSON.stringify({ rate: rateId, async: false, label_file_type: process.env.SHIPPO_LABEL_FILE_TYPE ?? "PDF_4x6" }),
+    body: JSON.stringify({ rate: rateId, async: false, label_file_type: policies.shippoLabelFileType }),
   })
 
   const messages = Array.isArray(transaction.messages)
@@ -339,6 +352,28 @@ export async function getCommercePolicies(): Promise<OrderPolicies> {
     freeShippingThreshold: numberValue(policy.free_shipping_threshold, 200),
     taxRate: numberValue(policy.tax_rate, 8),
     automaticShippingEnabled: Boolean(policy.automatic_shipping_enabled),
+    shippoFromAddress: {
+      name: requireString(policy.shippo_from_name, emptyPolicies.shippoFromAddress.name),
+      company: requireString(policy.shippo_from_company, emptyPolicies.shippoFromAddress.company),
+      street1: requireString(policy.shippo_from_street1, emptyPolicies.shippoFromAddress.street1),
+      street2: requireString(policy.shippo_from_street2, emptyPolicies.shippoFromAddress.street2),
+      city: requireString(policy.shippo_from_city, emptyPolicies.shippoFromAddress.city),
+      state: requireString(policy.shippo_from_state, emptyPolicies.shippoFromAddress.state),
+      zip: requireString(policy.shippo_from_zip, emptyPolicies.shippoFromAddress.zip),
+      country: requireString(policy.shippo_from_country, emptyPolicies.shippoFromAddress.country),
+      phone: requireString(policy.shippo_from_phone, emptyPolicies.shippoFromAddress.phone),
+      email: requireString(policy.shippo_from_email, emptyPolicies.shippoFromAddress.email),
+      isResidential: requireBoolean(policy.shippo_from_is_residential, emptyPolicies.shippoFromAddress.isResidential),
+    },
+    shippoParcelDefaults: {
+      length: numberValue(policy.shippo_parcel_length, emptyPolicies.shippoParcelDefaults.length),
+      width: numberValue(policy.shippo_parcel_width, emptyPolicies.shippoParcelDefaults.width),
+      height: numberValue(policy.shippo_parcel_height, emptyPolicies.shippoParcelDefaults.height),
+      weight: numberValue(policy.shippo_parcel_weight, emptyPolicies.shippoParcelDefaults.weight),
+      distanceUnit: requireString(policy.shippo_parcel_distance_unit, emptyPolicies.shippoParcelDefaults.distanceUnit) === "cm" ? "cm" : "in",
+      massUnit: ["lb", "oz", "g", "kg"].includes(requireString(policy.shippo_parcel_mass_unit)) ? requireString(policy.shippo_parcel_mass_unit) as "lb" | "oz" | "g" | "kg" : emptyPolicies.shippoParcelDefaults.massUnit,
+    },
+    shippoLabelFileType: validShippoLabelFileType(policy.shippo_label_file_type),
     coupons: couponRows.map(mapCoupon),
   }
 }
@@ -347,7 +382,32 @@ export async function saveCommercePolicies(policies: OrderPolicies) {
   await rest("order_policies", {
     method: "POST",
     headers: { "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
-    body: JSON.stringify({ id: true, shipping_amount: policies.shippingAmount, free_shipping_threshold: policies.freeShippingThreshold, tax_rate: policies.taxRate, automatic_shipping_enabled: policies.automaticShippingEnabled, updated_at: new Date().toISOString() }),
+    body: JSON.stringify({
+      id: true,
+      shipping_amount: policies.shippingAmount,
+      free_shipping_threshold: policies.freeShippingThreshold,
+      tax_rate: policies.taxRate,
+      automatic_shipping_enabled: policies.automaticShippingEnabled,
+      shippo_from_name: policies.shippoFromAddress.name,
+      shippo_from_company: policies.shippoFromAddress.company,
+      shippo_from_street1: policies.shippoFromAddress.street1,
+      shippo_from_street2: policies.shippoFromAddress.street2,
+      shippo_from_city: policies.shippoFromAddress.city,
+      shippo_from_state: policies.shippoFromAddress.state,
+      shippo_from_zip: policies.shippoFromAddress.zip,
+      shippo_from_country: policies.shippoFromAddress.country,
+      shippo_from_phone: policies.shippoFromAddress.phone,
+      shippo_from_email: policies.shippoFromAddress.email,
+      shippo_from_is_residential: policies.shippoFromAddress.isResidential,
+      shippo_parcel_length: policies.shippoParcelDefaults.length,
+      shippo_parcel_width: policies.shippoParcelDefaults.width,
+      shippo_parcel_height: policies.shippoParcelDefaults.height,
+      shippo_parcel_weight: policies.shippoParcelDefaults.weight,
+      shippo_parcel_distance_unit: policies.shippoParcelDefaults.distanceUnit,
+      shippo_parcel_mass_unit: policies.shippoParcelDefaults.massUnit,
+      shippo_label_file_type: policies.shippoLabelFileType,
+      updated_at: new Date().toISOString(),
+    }),
   })
 
   const normalizedCoupons = policies.coupons.map((coupon) => ({
@@ -416,7 +476,7 @@ export async function createCommerceOrder(order: CustomerOrder, userId?: string)
   const [resolvedUserId, resolvedCouponCode, shippingLabel] = await Promise.all([
     resolveOrderUserId(order.userEmail, userId),
     resolveOrderCouponCode(order.totals.coupon?.code),
-    policies.automaticShippingEnabled && order.paymentVerified && order.totals.shippingOption ? createShippoTransaction(order.totals.shippingOption.id) : Promise.resolve(undefined),
+    policies.automaticShippingEnabled && order.paymentVerified && order.totals.shippingOption ? createShippoTransaction(order.totals.shippingOption.id, policies) : Promise.resolve(undefined),
   ])
 
   await rest("orders", {

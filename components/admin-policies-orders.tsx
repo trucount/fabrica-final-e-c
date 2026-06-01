@@ -25,6 +25,11 @@ import {
 import { Plus, Save, Trash2 } from "lucide-react"
 import { generateOrdersExcel, downloadExcel } from "@/lib/excel-generator"
 
+
+const labelFileTypes = ["PNG", "PNG_2.3x7.5", "PDF", "PDF_2.3x7.5", "PDF_4x6", "PDF_4x8", "PDF_A4", "PDF_A5", "PDF_A6", "ZPLII"] as const
+const distanceUnits = ["in", "cm"] as const
+const massUnits = ["lb", "oz", "g", "kg"] as const
+
 export function AdminPoliciesPanel() {
   const { toast } = useToast()
   const [policies, setPolicies] = useState<OrderPolicies>(emptyPolicies)
@@ -62,6 +67,14 @@ export function AdminPoliciesPanel() {
     } finally {
       setIsSavingPolicies(false)
     }
+  }
+
+  const updateShippoFromAddress = (field: keyof OrderPolicies["shippoFromAddress"], value: string | boolean) => {
+    setPolicies({ ...policies, shippoFromAddress: { ...policies.shippoFromAddress, [field]: value } })
+  }
+
+  const updateShippoParcelDefaults = (field: keyof OrderPolicies["shippoParcelDefaults"], value: string | number) => {
+    setPolicies({ ...policies, shippoParcelDefaults: { ...policies.shippoParcelDefaults, [field]: value } })
   }
 
   const addCoupon = () => {
@@ -112,6 +125,40 @@ export function AdminPoliciesPanel() {
         <Button className="mt-4" onClick={() => void save()} disabled={isSavingPolicies}>
           <Save className="mr-2 h-4 w-4" />
           {isSavingPolicies ? "Saving..." : "Save Policies"}
+        </Button>
+      </section>
+
+
+      <section className="rounded-lg border p-4 sm:p-6">
+        <div className="mb-4">
+          <h2 className="font-serif text-2xl font-semibold">Shippo Settings</h2>
+          <p className="text-sm text-muted-foreground">Set the sender address, default parcel, and label format used for automatic shipping rates and labels.</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-2"><Label>Sender name</Label><Input value={policies.shippoFromAddress.name} onChange={(event) => updateShippoFromAddress("name", event.target.value)} /></div>
+          <div className="space-y-2"><Label>Company (optional)</Label><Input value={policies.shippoFromAddress.company} onChange={(event) => updateShippoFromAddress("company", event.target.value)} /></div>
+          <div className="space-y-2"><Label>Sender email</Label><Input type="email" value={policies.shippoFromAddress.email} onChange={(event) => updateShippoFromAddress("email", event.target.value)} /></div>
+          <div className="space-y-2"><Label>Phone</Label><Input value={policies.shippoFromAddress.phone} onChange={(event) => updateShippoFromAddress("phone", event.target.value)} /></div>
+          <div className="space-y-2"><Label>Street address</Label><Input value={policies.shippoFromAddress.street1} onChange={(event) => updateShippoFromAddress("street1", event.target.value)} /></div>
+          <div className="space-y-2"><Label>Street address 2</Label><Input value={policies.shippoFromAddress.street2} onChange={(event) => updateShippoFromAddress("street2", event.target.value)} /></div>
+          <div className="space-y-2"><Label>City</Label><Input value={policies.shippoFromAddress.city} onChange={(event) => updateShippoFromAddress("city", event.target.value)} /></div>
+          <div className="space-y-2"><Label>State / Province</Label><Input value={policies.shippoFromAddress.state} onChange={(event) => updateShippoFromAddress("state", event.target.value)} /></div>
+          <div className="space-y-2"><Label>ZIP / Postal code</Label><Input value={policies.shippoFromAddress.zip} onChange={(event) => updateShippoFromAddress("zip", event.target.value)} /></div>
+          <div className="space-y-2"><Label>Country ISO2</Label><Input value={policies.shippoFromAddress.country} onChange={(event) => updateShippoFromAddress("country", event.target.value.toUpperCase())} /></div>
+          <label className="flex items-center gap-3 rounded-md border p-3 text-sm"><input type="checkbox" checked={policies.shippoFromAddress.isResidential} onChange={(event) => updateShippoFromAddress("isResidential", event.target.checked)} /><span>Sender address is residential</span></label>
+          <div className="space-y-2"><Label>Label format</Label><Select value={policies.shippoLabelFileType} onValueChange={(value: OrderPolicies["shippoLabelFileType"]) => setPolicies({ ...policies, shippoLabelFileType: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{labelFileTypes.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent></Select></div>
+        </div>
+        <div className="mt-6 grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+          <div className="space-y-2"><Label>Length</Label><Input type="number" min="0.1" step="0.1" value={policies.shippoParcelDefaults.length} onChange={(event) => updateShippoParcelDefaults("length", Number(event.target.value))} /></div>
+          <div className="space-y-2"><Label>Width</Label><Input type="number" min="0.1" step="0.1" value={policies.shippoParcelDefaults.width} onChange={(event) => updateShippoParcelDefaults("width", Number(event.target.value))} /></div>
+          <div className="space-y-2"><Label>Height</Label><Input type="number" min="0.1" step="0.1" value={policies.shippoParcelDefaults.height} onChange={(event) => updateShippoParcelDefaults("height", Number(event.target.value))} /></div>
+          <div className="space-y-2"><Label>Weight per item</Label><Input type="number" min="0.1" step="0.1" value={policies.shippoParcelDefaults.weight} onChange={(event) => updateShippoParcelDefaults("weight", Number(event.target.value))} /></div>
+          <div className="space-y-2"><Label>Distance unit</Label><Select value={policies.shippoParcelDefaults.distanceUnit} onValueChange={(value: OrderPolicies["shippoParcelDefaults"]["distanceUnit"]) => updateShippoParcelDefaults("distanceUnit", value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{distanceUnits.map((unit) => <SelectItem key={unit} value={unit}>{unit}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-2"><Label>Mass unit</Label><Select value={policies.shippoParcelDefaults.massUnit} onValueChange={(value: OrderPolicies["shippoParcelDefaults"]["massUnit"]) => updateShippoParcelDefaults("massUnit", value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{massUnits.map((unit) => <SelectItem key={unit} value={unit}>{unit}</SelectItem>)}</SelectContent></Select></div>
+        </div>
+        <Button className="mt-4" onClick={() => void save()} disabled={isSavingPolicies}>
+          <Save className="mr-2 h-4 w-4" />
+          {isSavingPolicies ? "Saving..." : "Save Shippo Settings"}
         </Button>
       </section>
 

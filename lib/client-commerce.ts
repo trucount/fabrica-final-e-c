@@ -37,11 +37,39 @@ export type Coupon = {
   active: boolean
 }
 
+export type ShippoFromAddress = {
+  name: string
+  company: string
+  street1: string
+  street2: string
+  city: string
+  state: string
+  zip: string
+  country: string
+  phone: string
+  email: string
+  isResidential: boolean
+}
+
+export type ShippoParcelDefaults = {
+  length: number
+  width: number
+  height: number
+  weight: number
+  distanceUnit: "in" | "cm"
+  massUnit: "lb" | "oz" | "g" | "kg"
+}
+
+export type ShippoLabelFileType = "PNG" | "PNG_2.3x7.5" | "PDF" | "PDF_2.3x7.5" | "PDF_4x6" | "PDF_4x8" | "PDF_A4" | "PDF_A5" | "PDF_A6" | "ZPLII"
+
 export type OrderPolicies = {
   shippingAmount: number
   freeShippingThreshold: number
   taxRate: number
   automaticShippingEnabled: boolean
+  shippoFromAddress: ShippoFromAddress
+  shippoParcelDefaults: ShippoParcelDefaults
+  shippoLabelFileType: ShippoLabelFileType
   coupons: Coupon[]
 }
 
@@ -95,6 +123,28 @@ export const emptyPolicies: OrderPolicies = {
   freeShippingThreshold: 0,
   taxRate: 0,
   automaticShippingEnabled: false,
+  shippoFromAddress: {
+    name: "",
+    company: "",
+    street1: "",
+    street2: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "IN",
+    phone: "",
+    email: "",
+    isResidential: false,
+  },
+  shippoParcelDefaults: {
+    length: 10,
+    width: 10,
+    height: 4,
+    weight: 1,
+    distanceUnit: "in",
+    massUnit: "lb",
+  },
+  shippoLabelFileType: "PDF_4x6",
   coupons: [],
 }
 
