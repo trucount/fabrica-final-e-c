@@ -227,7 +227,7 @@ export default function CartPage() {
                 )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="font-medium">{totals.shipping === 0 ? "Free" : formatCurrency(totals.shipping)}</span>
+                  <span className="font-medium">{policies.automaticShippingEnabled ? "Calculated afterwards" : totals.shipping === 0 ? "Free" : formatCurrency(totals.shipping)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax</span>
@@ -246,7 +246,7 @@ export default function CartPage() {
 
               {policiesError ? <p className="text-xs text-destructive mb-4 sm:mb-6">{policiesError}</p> : null}
 
-              {!policiesError && subtotalAfterDiscount < policies.freeShippingThreshold && (
+              {!policiesError && !policies.automaticShippingEnabled && subtotalAfterDiscount < policies.freeShippingThreshold && (
                 <p className="text-xs text-muted-foreground mb-4 sm:mb-6">
                   Add {formatCurrency(policies.freeShippingThreshold - subtotalAfterDiscount)} more for free shipping
                 </p>

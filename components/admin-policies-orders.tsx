@@ -87,21 +87,26 @@ export function AdminPoliciesPanel() {
       <section className="rounded-lg border p-4 sm:p-6">
         <div className="mb-4">
           <h2 className="font-serif text-2xl font-semibold">Order Summary Policies</h2>
-          <p className="text-sm text-muted-foreground">Manage shipping, tax, and coupons used by cart and checkout.</p>
+          <p className="text-sm text-muted-foreground">Manage shipping, tax, Shippo automatic shipping, and coupons used by cart and checkout.</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <div className="space-y-2">
             <Label>Shipping amount per order</Label>
             <Input type="number" min="0" value={policies.shippingAmount} onChange={(event) => setPolicies({ ...policies, shippingAmount: Number(event.target.value) })} />
           </div>
           <div className="space-y-2">
             <Label>Free shipping threshold</Label>
-            <Input type="number" min="0" value={policies.freeShippingThreshold} onChange={(event) => setPolicies({ ...policies, freeShippingThreshold: Number(event.target.value) })} />
+            <Input type="number" min="0" value={policies.freeShippingThreshold} disabled={policies.automaticShippingEnabled} onChange={(event) => setPolicies({ ...policies, freeShippingThreshold: Number(event.target.value) })} />
+            {policies.automaticShippingEnabled ? <p className="text-xs text-muted-foreground">Disabled while Shippo automatic shipping is enabled.</p> : null}
           </div>
           <div className="space-y-2">
             <Label>Tax rate (%)</Label>
             <Input type="number" min="0" step="0.01" value={policies.taxRate} onChange={(event) => setPolicies({ ...policies, taxRate: Number(event.target.value) })} />
           </div>
+          <label className="flex items-center gap-3 rounded-md border p-3 text-sm">
+            <input type="checkbox" checked={policies.automaticShippingEnabled} onChange={(event) => setPolicies({ ...policies, automaticShippingEnabled: event.target.checked })} />
+            <span><span className="font-medium">Enable automatic shipping</span><span className="block text-xs text-muted-foreground">Uses Shippo rates, hides COD, and buys the selected label after online payment.</span></span>
+          </label>
         </div>
         {policiesError ? <p className="mt-4 text-sm text-destructive">{policiesError}</p> : null}
         <Button className="mt-4" onClick={() => void save()} disabled={isSavingPolicies}>

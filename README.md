@@ -44,3 +44,29 @@ NEXT_PUBLIC_UMAMI_SHARE_URL=https://cloud.umami.is/share/your-share-token/your-s
 ```
 
 This is optional. If provided, Admin > Analytics embeds your shared Umami dashboard in addition to the API-powered graphs.
+
+### Required for automatic Shippo shipping
+
+Run the updated `supabase/all-commerce.sql` once so the `automatic_shipping_enabled` policy column exists, then enable **Automatic shipping** in Admin > Policies only after adding these server-side variables:
+
+```env
+SHIPPO_API_KEY=your-shippo-api-token
+SHIPPO_FROM_NAME=Store Fulfillment
+SHIPPO_FROM_STREET1=your-warehouse-street
+SHIPPO_FROM_CITY=your-warehouse-city
+SHIPPO_FROM_STATE=your-warehouse-state
+SHIPPO_FROM_ZIP=your-warehouse-postal-code
+SHIPPO_FROM_COUNTRY=IN
+SHIPPO_FROM_PHONE=your-warehouse-phone
+SHIPPO_FROM_EMAIL=shipping@example.com
+```
+
+Optional parcel defaults used to quote Shippo rates when products do not have package dimensions:
+
+```env
+SHIPPO_PARCEL_LENGTH_IN=10
+SHIPPO_PARCEL_WIDTH_IN=10
+SHIPPO_PARCEL_HEIGHT_IN=4
+SHIPPO_PARCEL_WEIGHT_LB=1
+SHIPPO_LABEL_FILE_TYPE=PDF_4x6
+```

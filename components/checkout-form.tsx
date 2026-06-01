@@ -11,12 +11,15 @@ import { useCart } from "./cart-provider"
 import { useToast } from "@/hooks/use-toast"
 import { formatCurrency } from "@/lib/currency"
 import {
+  type OrderPolicies,
   type OrderTotals,
   type PaymentMethod,
   type SavedAddress,
+  type ShippingRateOption,
   MAX_SAVED_ADDRESSES,
   getCurrentUser,
   loadAddresses,
+  loadShippingRates,
   persistAddresses,
   persistOrder,
 } from "@/lib/client-commerce"
@@ -94,7 +97,7 @@ async function runRazorpayPayment(amount: number) {
 
 const blankAddress = { label: "", firstName: "", lastName: "", phone: "", address: "", apartment: "", city: "", state: "", zipCode: "", country: "India", isDefault: false }
 
-export function CheckoutForm({ totals }: { totals: OrderTotals }) {
+export function CheckoutForm({ policies, totals, onShippingRateChange }: { policies: OrderPolicies; totals: OrderTotals; onShippingRateChange: (rate: ShippingRateOption | undefined) => void }) {
   const router = useRouter()
   const { items, clearCart } = useCart()
   const { toast } = useToast()
@@ -102,8 +105,12 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
   const [addresses, setAddresses] = useState<SavedAddress[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState("new")
   const [saveNewAddress, setSaveNewAddress] = useState(true)
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod")
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(policies.automaticShippingEnabled ? "razorpay" : "cod")
   const [formData, setFormData] = useState(blankAddress)
+  const [shippingRates, setShippingRates] = useState<ShippingRateOption[]>([])
+  const [selectedShippingRateId, setSelectedShippingRateId] = useState("")
+  const [isLoadingRates, setIsLoadingRates] = useState(false)
+  const [ratesError, setRatesError] = useState("")
   const user = getCurrentUser()
 
   useEffect(() => {
@@ -123,6 +130,61 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
     loadAddresses(currentUser.id, currentUser.email).then(applyAddresses).catch((error) => toast({ title: "Could not load addresses", description: error instanceof Error ? error.message : "Please refresh and try again.", variant: "destructive" }))
   }, [toast])
 
+  useEffect(() => {
+    if (policies.automaticShippingEnabled) {
+      setPaymentMethod("razorpay")
+    }
+  }, [policies.automaticShippingEnabled])
+
+  const hasCompleteShippingAddress = Boolean(formData.firstName && formData.lastName && formData.phone && formData.address && formData.city && formData.state && formData.zipCode && formData.country)
+
+  useEffect(() => {
+    if (!policies.automaticShippingEnabled) {
+      setShippingRates([])
+      setSelectedShippingRateId("")
+      setRatesError("")
+      onShippingRateChange(undefined)
+      return
+    }
+
+    if (!hasCompleteShippingAddress || !items.length) {
+      setShippingRates([])
+      setSelectedShippingRateId("")
+      onShippingRateChange(undefined)
+      return
+    }
+
+    let cancelled = false
+    setIsLoadingRates(true)
+    setRatesError("")
+    const timeout = window.setTimeout(() => {
+      loadShippingRates({ address: formData as SavedAddress, items, userEmail: user?.email })
+        .then((rates) => {
+          if (cancelled) return
+          setShippingRates(rates)
+          const selectedRate = rates.find((rate) => rate.id === selectedShippingRateId) ?? rates[0]
+          setSelectedShippingRateId(selectedRate?.id ?? "")
+          onShippingRateChange(selectedRate)
+          setRatesError(rates.length ? "" : "No delivery options were returned for this address.")
+        })
+        .catch((error) => {
+          if (cancelled) return
+          setShippingRates([])
+          setSelectedShippingRateId("")
+          onShippingRateChange(undefined)
+          setRatesError(error instanceof Error ? error.message : "Delivery options could not be loaded.")
+        })
+        .finally(() => {
+          if (!cancelled) setIsLoadingRates(false)
+        })
+    }, 500)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeout)
+    }
+  }, [formData, hasCompleteShippingAddress, items, onShippingRateChange, policies.automaticShippingEnabled, selectedShippingRateId, user?.email])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedAddressId("new")
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -132,6 +194,11 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
     setSelectedAddressId(id)
     const address = addresses.find((item) => item.id === id)
     if (address) setFormData(address)
+  }
+
+  const selectShippingRate = (rateId: string) => {
+    setSelectedShippingRateId(rateId)
+    onShippingRateChange(shippingRates.find((rate) => rate.id === rateId))
   }
 
   const saveAddressIfNeeded = async () => {
@@ -152,13 +219,19 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
       return
     }
 
+    if (policies.automaticShippingEnabled && !totals.shippingOption) {
+      toast({ title: "Select a delivery option", description: ratesError || "Enter your full address and choose a Shippo delivery option.", variant: "destructive" })
+      return
+    }
+
     setIsProcessing(true)
     try {
       const shipping = await saveAddressIfNeeded()
+      const safePaymentMethod: PaymentMethod = policies.automaticShippingEnabled ? "razorpay" : paymentMethod
       let razorpayPaymentId: string | undefined
-      let paymentVerified = paymentMethod === "cod"
+      let paymentVerified = safePaymentMethod === "cod"
 
-      if (paymentMethod === "razorpay") {
+      if (safePaymentMethod === "razorpay") {
         razorpayPaymentId = await runRazorpayPayment(totals.total)
         paymentVerified = true
       }
@@ -170,7 +243,7 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
         items,
         shipping,
         status: "placed" as const,
-        paymentMethod,
+        paymentMethod: safePaymentMethod,
         paymentVerified,
         razorpayPaymentId,
         totals,
@@ -217,17 +290,37 @@ export function CheckoutForm({ totals }: { totals: OrderTotals }) {
         </div>
       </div>
 
+      {policies.automaticShippingEnabled ? (
+        <div>
+          <h2 className="font-serif text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">Delivery Options</h2>
+          {!hasCompleteShippingAddress ? <p className="text-sm text-muted-foreground">Enter your full shipping address to see live Shippo delivery options.</p> : null}
+          {isLoadingRates ? <p className="text-sm text-muted-foreground">Loading delivery options...</p> : null}
+          {ratesError ? <p className="text-sm text-destructive">{ratesError}</p> : null}
+          <div className="grid gap-3">
+            {shippingRates.map((rate) => (
+              <label key={rate.id} className="flex items-center justify-between gap-3 rounded-md border p-4">
+                <span className="flex items-center gap-3">
+                  <input type="radio" checked={selectedShippingRateId === rate.id} onChange={() => selectShippingRate(rate.id)} />
+                  <span><span className="font-medium">{rate.provider} {rate.serviceLevel}</span><span className="block text-xs text-muted-foreground">{rate.estimatedDays ? `${rate.estimatedDays} business day${rate.estimatedDays === 1 ? "" : "s"}` : rate.durationTerms || "Carrier-calculated delivery"}</span></span>
+                </span>
+                <span className="font-medium">{formatCurrency(rate.amount)}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div>
         <h2 className="font-serif text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">Payment Method</h2>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex items-center gap-3 rounded-md border p-4"><input type="radio" checked={paymentMethod === "cod"} onChange={() => setPaymentMethod("cod")} /> Cash on Delivery</label>
+          {!policies.automaticShippingEnabled ? <label className="flex items-center gap-3 rounded-md border p-4"><input type="radio" checked={paymentMethod === "cod"} onChange={() => setPaymentMethod("cod")} /> Cash on Delivery</label> : null}
           <label className="flex items-center gap-3 rounded-md border p-4"><input type="radio" checked={paymentMethod === "razorpay"} onChange={() => setPaymentMethod("razorpay")} /> Online via Razorpay</label>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">Online payment is securely created and verified by the checkout server.</p>
+        <p className="mt-2 text-xs text-muted-foreground">{policies.automaticShippingEnabled ? "COD is unavailable while automatic Shippo shipping is enabled." : "Online payment is securely created and verified by the checkout server."}</p>
       </div>
 
       <div className="border-t border-border pt-4 sm:pt-6">
-        <Button type="submit" size="lg" className="w-full h-12 sm:h-14 text-sm sm:text-base" disabled={isProcessing}>
+        <Button type="submit" size="lg" className="w-full h-12 sm:h-14 text-sm sm:text-base" disabled={isProcessing || isLoadingRates || (policies.automaticShippingEnabled && !totals.shippingOption)}>
           <Lock className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
           {isProcessing ? "Placing Order..." : `Place Order - ${formatCurrency(totals.total)}`}
         </Button>

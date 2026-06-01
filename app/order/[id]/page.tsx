@@ -104,6 +104,7 @@ export default function OrderDetailsPage() {
                 <InfoCard label="Status" value={statusLabel} />
                 <InfoCard label="Payment" value={`${order.paymentMethod === "cod" ? "Cash on Delivery" : "Razorpay"} · ${order.paymentVerified ? "Verified" : "Pending"}`} />
                 <InfoCard label="Items" value={`${order.items.reduce((sum, item) => sum + item.quantity, 0)} total`} />
+                {order.totals.shippingOption ? <InfoCard label="Delivery" value={`${order.totals.shippingOption.provider} ${order.totals.shippingOption.serviceLevel}`} /> : null}
               </div>
 
               <div className="mt-8">
@@ -143,6 +144,7 @@ export default function OrderDetailsPage() {
                 <SummaryRow label="Subtotal" value={formatCurrency(order.totals.subtotal)} />
                 <SummaryRow label="Discount" value={`-${formatCurrency(order.totals.discount)}`} />
                 <SummaryRow label="Shipping" value={order.totals.shipping === 0 ? "Free" : formatCurrency(order.totals.shipping)} />
+                {order.totals.shippingLabel?.trackingNumber ? <SummaryRow label="Tracking" value={order.totals.shippingLabel.trackingNumber} /> : null}
                 <SummaryRow label="Tax" value={formatCurrency(order.totals.tax)} />
                 <div className="border-t pt-3">
                   <SummaryRow label="Total" value={formatCurrency(order.totals.total)} strong />

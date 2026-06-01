@@ -41,7 +41,27 @@ export type OrderPolicies = {
   shippingAmount: number
   freeShippingThreshold: number
   taxRate: number
+  automaticShippingEnabled: boolean
   coupons: Coupon[]
+}
+
+export type ShippingRateOption = {
+  id: string
+  provider: string
+  serviceLevel: string
+  amount: number
+  currency: string
+  estimatedDays?: number
+  durationTerms?: string
+}
+
+export type ShippingLabel = {
+  transactionId: string
+  labelUrl?: string
+  trackingNumber?: string
+  trackingUrlProvider?: string
+  status?: string
+  messages?: string[]
 }
 
 export type OrderTotals = {
@@ -51,6 +71,8 @@ export type OrderTotals = {
   tax: number
   total: number
   coupon?: Coupon
+  shippingOption?: ShippingRateOption
+  shippingLabel?: ShippingLabel
 }
 
 export type CustomerOrder = {
@@ -72,6 +94,7 @@ export const emptyPolicies: OrderPolicies = {
   shippingAmount: 0,
   freeShippingThreshold: 0,
   taxRate: 0,
+  automaticShippingEnabled: false,
   coupons: [],
 }
 
@@ -100,7 +123,7 @@ export function saveCurrentUser(user: CommerceUser | null) {
   }
 }
 
-export function calculateTotals(subtotal: number, policies: OrderPolicies, couponCode?: string): OrderTotals {
+export function calculateTotals(subtotal: number, policies: OrderPolicies, couponCode?: string, shippingOption?: ShippingRateOption): OrderTotals {
   const coupon = policies.coupons.find((item) => item.active && item.code.toUpperCase() === couponCode?.toUpperCase())
   const rawDiscount = coupon
     ? coupon.discountType === "percent"
@@ -109,7 +132,11 @@ export function calculateTotals(subtotal: number, policies: OrderPolicies, coupo
     : 0
   const discount = Math.min(subtotal, Math.max(0, rawDiscount))
   const subtotalAfterDiscount = subtotal - discount
-  const shipping = subtotalAfterDiscount >= policies.freeShippingThreshold ? 0 : Math.max(0, policies.shippingAmount)
+  const shipping = policies.automaticShippingEnabled
+    ? Math.max(0, shippingOption?.amount ?? 0)
+    : subtotalAfterDiscount >= policies.freeShippingThreshold
+      ? 0
+      : Math.max(0, policies.shippingAmount)
   const tax = (subtotalAfterDiscount * Math.max(0, policies.taxRate)) / 100
 
   return {
@@ -119,6 +146,7 @@ export function calculateTotals(subtotal: number, policies: OrderPolicies, coupo
     tax,
     total: subtotalAfterDiscount + shipping + tax,
     coupon,
+    shippingOption,
   }
 }
 
@@ -156,6 +184,10 @@ export async function loadOrders(options: { email?: string; id?: string } = {}) 
 
 export async function persistOrder(order: CustomerOrder, userId?: string) {
   await commerceFetch<{ ok: true }>("/api/commerce/orders", { method: "POST", body: JSON.stringify({ order, userId }) })
+}
+
+export async function loadShippingRates(input: { address: SavedAddress; items: CartItem[]; userEmail?: string }) {
+  return commerceFetch<ShippingRateOption[]>("/api/commerce/shipping-rates", { method: "POST", body: JSON.stringify(input) })
 }
 
 export async function persistOrderStatus(id: string, status: OrderStatus) {

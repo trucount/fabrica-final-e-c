@@ -306,15 +306,20 @@ create table if not exists public.order_policies (
   shipping_amount numeric(10, 2) not null default 15 check (shipping_amount >= 0),
   free_shipping_threshold numeric(10, 2) not null default 200 check (free_shipping_threshold >= 0),
   tax_rate numeric(5, 2) not null default 8 check (tax_rate >= 0),
+  automatic_shipping_enabled boolean not null default false,
   updated_at timestamptz not null default now()
 );
 
-insert into public.order_policies (id, shipping_amount, free_shipping_threshold, tax_rate, updated_at)
-values (true, 15, 200, 8, now())
+alter table public.order_policies
+  add column if not exists automatic_shipping_enabled boolean not null default false;
+
+insert into public.order_policies (id, shipping_amount, free_shipping_threshold, tax_rate, automatic_shipping_enabled, updated_at)
+values (true, 15, 200, 8, false, now())
 on conflict (id) do update
 set shipping_amount = excluded.shipping_amount,
     free_shipping_threshold = excluded.free_shipping_threshold,
     tax_rate = excluded.tax_rate,
+    automatic_shipping_enabled = public.order_policies.automatic_shipping_enabled,
     updated_at = excluded.updated_at;
 
 create table if not exists public.coupons (
