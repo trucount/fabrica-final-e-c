@@ -86,7 +86,16 @@ export default function OrderDetailsPage() {
           <div className="bg-foreground p-5 text-background sm:p-8 print:bg-white print:text-black">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="font-serif text-3xl font-semibold">{brandName || "Store"}</p>
+                <div className="flex items-center gap-2">
+                  <Image
+                    src="/logo-black.png"
+                    alt="ASTERA Logo"
+                    width={32}
+                    height={32}
+                    className="h-8 w-auto object-contain brightness-0 invert print:brightness-0 print:invert-0"
+                  />
+                  <p className="font-serif text-3xl font-semibold">{brandName || "Store"}</p>
+                </div>
                 <p className="mt-2 text-sm opacity-80">Thank you for your order. Keep this receipt for your records.</p>
               </div>
               <div className="rounded-xl bg-background/10 p-4 text-sm print:border print:bg-white">
@@ -155,7 +164,16 @@ export default function OrderDetailsPage() {
         </section>
       </main>
       <footer className="mt-12 pb-8 text-center print:hidden">
-        <p className="text-xs tracking-widest text-muted-foreground uppercase">Powered by Sparrow AI Solutions</p>
+        <div className="flex flex-col items-center gap-4">
+          <Image
+            src="/logo-black.png"
+            alt="ASTERA Logo"
+            width={20}
+            height={20}
+            className="h-5 w-auto object-contain opacity-50"
+          />
+          <p className="text-xs tracking-widest text-muted-foreground uppercase">Powered by Sparrow AI Solutions</p>
+        </div>
       </footer>
     </div>
   )

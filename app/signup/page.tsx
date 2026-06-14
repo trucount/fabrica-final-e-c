@@ -76,8 +76,17 @@ function SignupContent() {
             </Button>
           </div>
         </form>
-        <footer className="mt-12 text-center">
-          <p className="text-xs tracking-widest text-muted-foreground uppercase">Powered by Sparrow AI Solutions</p>
+<footer className="mt-12 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <Image
+              src="/logo-black.png"
+              alt="ASTERA Logo"
+              width={20}
+              height={20}
+              className="h-5 w-auto object-contain opacity-50"
+            />
+            <p className="text-xs tracking-widest text-muted-foreground uppercase">Powered by Sparrow AI Solutions</p>
+          </div>
         </footer>
       </main>
     </div>

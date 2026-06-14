@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ShoppingBag, User, Menu } from "lucide-react"
+import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useCart } from "./cart-provider"
 import { Button } from "./ui/button"
@@ -50,8 +51,15 @@ export function Header() {
   return (
     <header className="relative w-full border-b border-border bg-background">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-        <Link href={homeHref} className="font-serif text-2xl font-semibold tracking-tight">
-          {brandName}
+        <Link href={homeHref} className="flex items-center gap-2 font-serif text-2xl font-semibold tracking-tight">
+          <Image
+            src="/logo-black.png"
+            alt="ASTERA Logo"
+            width={32}
+            height={32}
+            className="h-8 w-auto object-contain"
+          />
+          <span>{brandName}</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
@@ -97,7 +105,16 @@ export function Header() {
               className="w-[85vw] sm:w-[350px] px-6 [&>button]:border-0 [&>button]:shadow-none [&>button]:ring-0 [&>button]:top-8"
             >
               <div className="flex flex-col gap-8 pt-8">
-                <div className="font-serif text-2xl font-semibold tracking-tight">{brandName}</div>
+                <div className="flex items-center gap-2 font-serif text-2xl font-semibold tracking-tight">
+                  <Image
+                    src="/logo-black.png"
+                    alt="ASTERA Logo"
+                    width={32}
+                    height={32}
+                    className="h-8 w-auto object-contain"
+                  />
+                  <span>{brandName}</span>
+                </div>
 
                 <nav className="flex flex-col gap-0">
                   <Link
