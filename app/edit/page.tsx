@@ -96,18 +96,18 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
             <div className="absolute inset-0 bg-black/40" />
           </div>
 
-          <div className="relative z-10 text-center px-4 text-primary-foreground w-full max-w-4xl">
+          <div className="relative z-10 text-center px-4 w-full max-w-4xl">
             <Input
               name="heroTitle"
               defaultValue={homeContent.heroTitle}
               aria-label="Home hero title"
-              className="h-auto border-dashed bg-background/75 text-center font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-4 sm:mb-6 tracking-tight text-balance"
+              className="h-auto border-dashed bg-background/75 text-center font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-4 sm:mb-6 tracking-tight text-balance text-primary-foreground"
             />
             <Input
               name="heroVideoUrl"
               defaultValue={homeContent.heroVideoUrl}
               aria-label="Home hero video URL"
-              className="mx-auto mb-4 max-w-2xl border-dashed bg-background/75 text-center text-sm text-muted-foreground"
+              className="mx-auto mb-4 max-w-2xl border-dashed bg-background/75 text-center text-sm text-primary-foreground/80"
             />
             <Textarea
               name="heroSubtitle"
