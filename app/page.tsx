@@ -99,7 +99,7 @@ export default async function Home() {
                   alt="ASTERA Logo"
                   width={24}
                   height={24}
-                  className="h-6 w-auto object-contain"
+                  className="h-6 w-auto object-contain dark:invert"
                 />
                 <span>{siteContent.brandName}</span>
               </h3>

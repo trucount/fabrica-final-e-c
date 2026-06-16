@@ -5,7 +5,7 @@ export async function ShippingTicker() {
   const { tickerMessages } = await getSiteContent()
 
   return (
-    <div className="sticky top-0 z-50 bg-foreground text-background py-1.5 overflow-hidden">
+    <div className="sticky top-0 z-50 bg-primary text-primary-foreground py-1.5 overflow-hidden">
       <div className="flex gap-8">
         {["set1", "set2", "set3"].map((setName, setIndex) => (
           <div

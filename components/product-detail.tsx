@@ -81,8 +81,8 @@ export function ProductDetail({ product }: { product: Product }) {
               priority
             />
             {showSuccess && (
-              <div className="absolute inset-0 bg-foreground/90 flex items-center justify-center animate-in fade-in zoom-in-50 duration-300">
-                <div className="bg-background text-foreground rounded-full p-4 sm:p-6 animate-in zoom-in-50 duration-500 delay-150">
+              <div className="absolute inset-0 bg-primary/90 flex items-center justify-center animate-in fade-in zoom-in-50 duration-300">
+                <div className="bg-primary-foreground text-primary rounded-full p-4 sm:p-6 animate-in zoom-in-50 duration-500 delay-150">
                   <Check className="h-8 w-8 sm:h-12 sm:w-12" />
                 </div>
               </div>
@@ -94,7 +94,7 @@ export function ProductDetail({ product }: { product: Product }) {
                 key={index}
                 onClick={() => setSelectedImage(index)}
                 className={`relative aspect-[3/4] bg-secondary overflow-hidden border-2 transition-colors ${
-                  selectedImage === index ? "border-foreground" : "border-transparent"
+                  selectedImage === index ? "border-primary" : "border-transparent"
                 }`}
               >
                 <Image
@@ -147,8 +147,8 @@ export function ProductDetail({ product }: { product: Product }) {
                   }}
                   className={`px-4 sm:px-6 py-2 sm:py-3 border transition-all duration-200 text-sm sm:text-base ${
                     selectedSize === size
-                      ? "bg-foreground text-background border-foreground scale-105"
-                      : "bg-background text-foreground border-border hover:border-foreground hover:scale-105"
+                      ? "bg-primary text-primary-foreground border-primary scale-105"
+                      : "bg-background text-foreground border-border hover:border-primary hover:scale-105"
                   }`}
                 >
                   {size}

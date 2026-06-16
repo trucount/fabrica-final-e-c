@@ -96,7 +96,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
             <div className="absolute inset-0 bg-black/40" />
           </div>
 
-          <div className="relative z-10 text-center px-4 text-white w-full max-w-4xl">
+          <div className="relative z-10 text-center px-4 text-primary-foreground w-full max-w-4xl">
             <Input
               name="heroTitle"
               defaultValue={homeContent.heroTitle}
@@ -266,7 +266,7 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
                     alt="ASTERA Logo"
                     width={24}
                     height={24}
-                    className="h-6 w-auto object-contain"
+                    className="h-6 w-auto object-contain dark:invert"
                   />
                   <span>{siteContent.brandName}</span>
                 </h3>

@@ -65,7 +65,7 @@ export function ProductCard({ product }: { product: Product }) {
 
           {showCartAnimation && (
             <div className="absolute top-4 right-4 animate-in zoom-in-50 fade-in duration-300">
-              <div className="bg-foreground text-background rounded-full p-2 animate-bounce">
+              <div className="bg-primary text-primary-foreground rounded-full p-2 animate-bounce">
                 <ShoppingBag className="h-4 w-4" />
               </div>
             </div>

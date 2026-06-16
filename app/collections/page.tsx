@@ -40,13 +40,13 @@ export default async function CollectionsPage() {
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <p className="text-white/80 text-xs sm:text-sm mb-2">{collection.items}</p>
-                  <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold text-white mb-2">
+                  <p className="text-primary-foreground/80 text-xs sm:text-sm mb-2">{collection.items}</p>
+                  <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold text-primary-foreground mb-2">
                     {collection.name}
                   </h2>
-                  <p className="text-white/90 text-sm sm:text-base opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                  <p className="text-primary-foreground/90 text-sm sm:text-base opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
                     {collection.description}
                   </p>
                 </div>
