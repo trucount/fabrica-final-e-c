@@ -76,13 +76,13 @@ export function Header() {
 
         <div className="flex items-center gap-4">
           <Link href="/profile">
-            <Button variant="ghost" size="icon" className="hidden md:flex">
+            <Button variant="outline" size="icon" className="hidden md:flex">
               <User className="h-5 w-5" />
               <span className="sr-only">Profile</span>
             </Button>
           </Link>
           <Link href="/cart">
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="outline" size="icon" className="relative">
               <ShoppingBag className="h-5 w-5" />
               {itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-medium animate-in zoom-in-50 duration-200">

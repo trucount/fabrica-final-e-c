@@ -39,11 +39,11 @@ export default async function Home() {
           <div className="absolute inset-0 bg-black/40" />
         </div>
 
-        <div className="relative z-10 text-center px-4 text-white">
+        <div className="relative z-10 text-center px-4 text-primary-foreground">
           <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-4 sm:mb-6 tracking-tight text-balance drop-shadow-lg">
             {homeContent.heroTitle}
           </h1>
-          <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto text-balance drop-shadow-md text-white/90">
+          <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto text-balance drop-shadow-md text-primary-foreground/90">
             {homeContent.heroSubtitle}
           </p>
           <Button asChild size="lg" className="h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
