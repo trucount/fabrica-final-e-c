@@ -115,17 +115,17 @@ export function SparrowChatbot() {
     <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
       {open ? (
         <section className="fixed inset-0 flex flex-col overflow-hidden border bg-background shadow-2xl sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[620px] sm:w-[390px] sm:rounded-3xl">
-          <div className="flex items-center justify-between border-b bg-foreground px-4 py-3 text-background">
+          <div className="flex items-center justify-between border-b bg-primary px-4 py-3 text-primary-foreground">
             <div>
               <div className="font-serif text-lg font-semibold leading-tight">{title}</div>
-              <div className="text-xs text-background/75">About, policies, shipping, returns & contact</div>
+              <div className="text-xs text-primary-foreground/75">About, policies, shipping, returns & contact</div>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="text-background hover:bg-background/10 hover:text-background"><X className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"><X className="h-5 w-5" /></Button>
           </div>
           <div className="flex-1 space-y-3 overflow-y-auto bg-secondary/30 p-4">
             {messages.map((message, index) => (
               <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[85%] space-y-1 rounded-2xl px-4 py-3 text-sm leading-relaxed ${message.role === "user" ? "bg-foreground text-background" : "border bg-background text-foreground"}`}>
+                <div className={`max-w-[85%] space-y-1 rounded-2xl px-4 py-3 text-sm leading-relaxed ${message.role === "user" ? "bg-primary text-primary-foreground" : "border bg-background text-foreground"}`}>
                   {renderMessage(message.content)}
                 </div>
               </div>
