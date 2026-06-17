@@ -130,6 +130,16 @@ function mapShippingLabel(row: Record<string, unknown>): ShippingLabel {
   }
 }
 
+function mapTheme(row: Record<string, unknown>): Theme {
+  return {
+    id: requireString(row.id),
+    name: requireString(row.name),
+    label: requireString(row.label),
+    colors: isRecord(row.colors) ? (row.colors as ThemeColors) : emptyPolicies.colors,
+    is_active: requireBoolean(row.is_active, true),
+  }
+}
+
 function mapOrder(row: Record<string, unknown>): CustomerOrder {
   const items = Array.isArray(row.order_items) ? row.order_items : []
   const totals = isRecord(row.totals) ? row.totals : {}
@@ -407,7 +417,33 @@ export async function getCommercePolicies(): Promise<OrderPolicies> {
     },
     shippoLabelFileType: validShippoLabelFileType(policy.shippo_label_file_type),
     coupons: couponRows.map(mapCoupon),
+    activeThemeName: requireString(policy.active_theme_name, "default"),
   }
+}
+
+export async function getCommerceThemes(): Promise<Theme[]> {
+  const response = await rest("themes?select=*&order=created_at.asc")
+  const rows = (await response.json()) as Array<Record<string, unknown>>
+  return rows.map(mapTheme)
+}
+
+export async function saveCommerceTheme(theme: Partial<Theme>): Promise<Theme> {
+  const { id, ...data } = theme
+  const body = {
+    ...data,
+    updated_at: new Date().toISOString(),
+  }
+
+  const response = id
+    ? await rest(`themes?id=eq.${id}`, { method: "PATCH", body: JSON.stringify(body), headers: { Prefer: "return=representation" } })
+    : await rest("themes", { method: "POST", body: JSON.stringify(body), headers: { Prefer: "return=representation" } })
+
+  const rows = (await response.json()) as Array<Record<string, unknown>>
+  return mapTheme(rows[0] ?? {})
+}
+
+export async function deleteCommerceTheme(id: string) {
+  await rest(`themes?id=eq.${id}`, { method: "DELETE" })
 }
 
 export async function saveCommercePolicies(policies: OrderPolicies) {
@@ -438,6 +474,7 @@ export async function saveCommercePolicies(policies: OrderPolicies) {
       shippo_parcel_distance_unit: policies.shippoParcelDefaults.distanceUnit,
       shippo_parcel_mass_unit: policies.shippoParcelDefaults.massUnit,
       shippo_label_file_type: policies.shippoLabelFileType,
+      active_theme_name: policies.activeThemeName,
       updated_at: new Date().toISOString(),
     }),
   })

@@ -7,6 +7,7 @@ import { CartProvider } from "@/components/cart-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { ShippingTicker } from "@/components/shipping-ticker"
 import { SparrowChatbot } from "@/components/sparrow-chatbot"
+import { ThemeProvider } from "@/components/theme-context"
 import Script from "next/script"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
@@ -80,12 +81,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geist.variable} ${playfair.variable} font-sans antialiased`}>
-        <CartProvider>
-          <ShippingTicker />
-          {children}
-          <SparrowChatbot />
-          <Toaster />
-        </CartProvider>
+        <ThemeProvider>
+          <CartProvider>
+            <ShippingTicker />
+            {children}
+            <SparrowChatbot />
+            <Toaster />
+          </CartProvider>
+        </ThemeProvider>
         <Analytics />
         <Script defer src="https://cloud.umami.is/script.js" data-website-id={umamiWebsiteId} strategy="afterInteractive" />
       </body>

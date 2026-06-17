@@ -62,6 +62,25 @@ export type ShippoParcelDefaults = {
 
 export type ShippoLabelFileType = "PNG" | "PNG_2.3x7.5" | "PDF" | "PDF_2.3x7.5" | "PDF_4x6" | "PDF_4x8" | "PDF_A4" | "PDF_A5" | "PDF_A6" | "ZPLII"
 
+export type ThemeColors = {
+  background: string
+  foreground: string
+  primary: string
+  primary_foreground: string
+  secondary: string
+  accent: string
+  muted: string
+  border: string
+}
+
+export type Theme = {
+  id: string
+  name: string
+  label: string
+  colors: ThemeColors
+  is_active: boolean
+}
+
 export type OrderPolicies = {
   shippingAmount: number
   freeShippingThreshold: number
@@ -71,6 +90,7 @@ export type OrderPolicies = {
   shippoParcelDefaults: ShippoParcelDefaults
   shippoLabelFileType: ShippoLabelFileType
   coupons: Coupon[]
+  activeThemeName: string
 }
 
 export type ShippingRateOption = {
@@ -147,6 +167,7 @@ export const emptyPolicies: OrderPolicies = {
   },
   shippoLabelFileType: "PDF_4x6",
   coupons: [],
+  activeThemeName: "default",
 }
 
 export const orderStatuses: Array<{ value: OrderStatus; label: string }> = [
@@ -224,6 +245,18 @@ export async function loadPolicies() {
 
 export async function persistPolicies(policies: OrderPolicies) {
   return commerceFetch<OrderPolicies>("/api/commerce/policies", { method: "PUT", body: JSON.stringify(policies) })
+}
+
+export async function loadThemes() {
+  return commerceFetch<Theme[]>("/api/commerce/themes")
+}
+
+export async function persistTheme(theme: Partial<Theme>) {
+  return commerceFetch<Theme>("/api/commerce/themes", { method: "POST", body: JSON.stringify(theme) })
+}
+
+export async function deleteTheme(id: string) {
+  return commerceFetch<{ ok: true }>(`/api/commerce/themes?id=${id}`, { method: "DELETE" })
 }
 
 export async function loadOrders(options: { email?: string; id?: string } = {}) {

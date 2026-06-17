@@ -15,13 +15,19 @@ import {
   type CouponKind,
   type OrderPolicies,
   type OrderStatus,
+  type Theme,
+  type ThemeColors,
   emptyPolicies,
   loadOrders,
   loadPolicies,
+  loadThemes,
   orderStatuses,
   persistOrderStatus,
   persistPolicies,
+  persistTheme,
+  deleteTheme,
 } from "@/lib/client-commerce"
+import { useTheme } from "@/components/theme-context"
 import { Plus, Save, Trash2 } from "lucide-react"
 import { generateOrdersExcel, downloadExcel } from "@/lib/excel-generator"
 
@@ -32,9 +38,27 @@ const massUnits = ["lb", "oz", "g", "kg"] as const
 
 export function AdminPoliciesPanel() {
   const { toast } = useToast()
+  const { refresh: refreshGlobalTheme, themes: globalThemes } = useTheme()
   const [policies, setPolicies] = useState<OrderPolicies>(emptyPolicies)
   const [policiesError, setPoliciesError] = useState("")
   const [isSavingPolicies, setIsSavingPolicies] = useState(false)
+  const [themes, setThemes] = useState<Theme[]>([])
+  const [isSavingTheme, setIsSavingTheme] = useState(false)
+  const [newTheme, setNewTheme] = useState<Partial<Theme>>({
+    name: "",
+    label: "",
+    colors: {
+      background: "oklch(0.985 0 0)",
+      foreground: "oklch(0.145 0 0)",
+      primary: "oklch(0.205 0 0)",
+      primary_foreground: "oklch(0.985 0 0)",
+      secondary: "oklch(0.97 0 0)",
+      accent: "oklch(0.97 0 0)",
+      muted: "oklch(0.97 0 0)",
+      border: "oklch(0.922 0 0)",
+    },
+  })
+
   const [coupon, setCoupon] = useState<Coupon>({
     code: "",
     label: "",
@@ -45,12 +69,13 @@ export function AdminPoliciesPanel() {
   })
 
   useEffect(() => {
-    loadPolicies()
-      .then((nextPolicies) => {
+    Promise.all([loadPolicies(), loadThemes()])
+      .then(([nextPolicies, nextThemes]) => {
         setPolicies(nextPolicies)
+        setThemes(nextThemes)
         setPoliciesError("")
       })
-      .catch((error) => setPoliciesError(error instanceof Error ? error.message : "Supabase policies could not be loaded."))
+      .catch((error) => setPoliciesError(error instanceof Error ? error.message : "Supabase data could not be loaded."))
   }, [])
 
   const save = async (nextPolicies = policies) => {
@@ -60,6 +85,7 @@ export function AdminPoliciesPanel() {
       setPolicies(saved)
       setPoliciesError("")
       toast({ title: "Policies saved", description: "Shipping, tax, and coupons were saved to Supabase." })
+      void refreshGlobalTheme()
     } catch (error) {
       const message = error instanceof Error ? error.message : "Supabase save failed."
       setPoliciesError(message)
@@ -67,6 +93,42 @@ export function AdminPoliciesPanel() {
     } finally {
       setIsSavingPolicies(false)
     }
+  }
+
+  const saveTheme = async (theme: Partial<Theme>) => {
+    setIsSavingTheme(true)
+    try {
+      await persistTheme(theme)
+      const nextThemes = await loadThemes()
+      setThemes(nextThemes)
+      toast({ title: "Theme saved", description: "Theme configuration was saved to Supabase." })
+      void refreshGlobalTheme()
+    } catch (error) {
+      toast({ title: "Theme save failed", description: error instanceof Error ? error.message : "Supabase save failed.", variant: "destructive" })
+    } finally {
+      setIsSavingTheme(false)
+    }
+  }
+
+  const removeTheme = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this theme?")) return
+    try {
+      await deleteTheme(id)
+      setThemes(themes.filter((t) => t.id !== id))
+      toast({ title: "Theme deleted" })
+    } catch (error) {
+      toast({ title: "Delete failed", description: error instanceof Error ? error.message : "Supabase delete failed.", variant: "destructive" })
+    }
+  }
+
+  const updateNewThemeColor = (key: keyof ThemeColors, value: string) => {
+    setNewTheme({
+      ...newTheme,
+      colors: {
+        ...(newTheme.colors as ThemeColors),
+        [key]: value,
+      },
+    })
   }
 
   const updateShippoFromAddress = (field: keyof OrderPolicies["shippoFromAddress"], value: string | boolean) => {
@@ -103,6 +165,21 @@ export function AdminPoliciesPanel() {
           <p className="text-sm text-muted-foreground">Manage shipping, tax, Shippo automatic shipping, and coupons used by cart and checkout.</p>
         </div>
         <div className="grid gap-4 md:grid-cols-4">
+          <div className="space-y-2">
+            <Label>Active Theme</Label>
+            <Select value={policies.activeThemeName} onValueChange={(value) => setPolicies({ ...policies, activeThemeName: value })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {themes.map((t) => (
+                  <SelectItem key={t.id} value={t.name}>
+                    {t.label} ({t.name})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <Label>Shipping amount per order</Label>
             <Input type="number" min="0" value={policies.shippingAmount} onChange={(event) => setPolicies({ ...policies, shippingAmount: Number(event.target.value) })} />
@@ -160,6 +237,73 @@ export function AdminPoliciesPanel() {
           <Save className="mr-2 h-4 w-4" />
           {isSavingPolicies ? "Saving..." : "Save Shippo Settings"}
         </Button>
+      </section>
+
+      <section className="rounded-lg border p-4 sm:p-6">
+        <h2 className="font-serif text-2xl font-semibold mb-4">Theme Management</h2>
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-2">
+              <Label>Theme Name (ID)</Label>
+              <Input placeholder="e.g. ocean-breeze" value={newTheme.name} onChange={(e) => setNewTheme({ ...newTheme, name: e.target.value.toLowerCase().replace(/\s+/g, "-") })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Theme Label</Label>
+              <Input placeholder="e.g. Ocean Breeze" value={newTheme.label} onChange={(e) => setNewTheme({ ...newTheme, label: e.target.value })} />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-8">
+            {Object.keys(newTheme.colors || {}).map((colorKey) => (
+              <div key={colorKey} className="space-y-2">
+                <Label className="text-[10px] uppercase">{colorKey.replace("_", " ")}</Label>
+                <Input value={(newTheme.colors as any)[colorKey]} onChange={(e) => updateNewThemeColor(colorKey as keyof ThemeColors, e.target.value)} />
+              </div>
+            ))}
+          </div>
+
+          <Button onClick={() => saveTheme(newTheme)} disabled={isSavingTheme || !newTheme.name || !newTheme.label}>
+            <Plus className="mr-2 h-4 w-4" /> Add Theme
+          </Button>
+
+          <div className="mt-6 overflow-x-auto rounded-md border">
+            <Table className="min-w-[1000px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Label</TableHead>
+                  <TableHead>Colors (OKLCH)</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {themes.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell className="font-mono text-xs">{t.name}</TableCell>
+                    <TableCell>{t.label}</TableCell>
+                    <TableCell>
+                      <div className="grid grid-cols-4 gap-1 text-[10px]">
+                        {Object.entries(t.colors).map(([k, v]) => (
+                          <div key={k} className="flex items-center gap-1">
+                            <div className="h-2 w-2 rounded-full border" style={{ backgroundColor: v.includes("oklch") ? v : "#ccc" }} />
+                            <span className="truncate opacity-70">{k}: {v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="destructive" onClick={() => removeTheme(t.id)} disabled={t.name === "default" || t.name === policies.activeThemeName}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       </section>
 
       <section className="rounded-lg border p-4 sm:p-6">
