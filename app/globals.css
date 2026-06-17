@@ -201,3 +201,13 @@
     animation: shake 0.5s ease-in-out;
   }
 }
+
+@keyframes hero-image-carousel {
+  0%, 20% { opacity: 1; }
+  25%, 95% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.animate-hero-image-carousel {
+  animation: hero-image-carousel 20s infinite;
+}

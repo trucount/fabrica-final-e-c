@@ -13,7 +13,9 @@ create table if not exists public.themes (
 
 -- 2. Add active_theme_name to order_policies if not exists
 alter table public.order_policies 
-add column if not exists active_theme_name text default 'default';
+add column if not exists active_theme_name text not null default 'default',
+add column if not exists show_ticker boolean not null default true,
+add column if not exists section_styles jsonb not null default '{"homeHero":"video"}'::jsonb;
 
 -- 3. Insert diverse themes
 insert into public.themes (name, label, colors)

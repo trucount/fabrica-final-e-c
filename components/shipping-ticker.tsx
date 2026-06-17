@@ -5,7 +5,7 @@ import { Truck } from "lucide-react"
 import { useTheme } from "@/components/theme-context"
 
 export function ShippingTicker() {
-  const { activeTheme } = useTheme()
+  const { activeTheme, policies, isLoading: isThemeLoading } = useTheme()
   const [tickerMessages, setTickerMessages] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -21,7 +21,7 @@ export function ShippingTicker() {
       .finally(() => setIsLoading(false))
   }, [])
 
-  if (isLoading || !tickerMessages.length) return null
+  if (isLoading || isThemeLoading || !policies || policies.themeSettings.showTicker === false || !tickerMessages.length) return null
 
   const isDefaultTheme = activeTheme?.name === "default"
   const textColorClass = isDefaultTheme ? "text-white" : "text-primary-foreground"

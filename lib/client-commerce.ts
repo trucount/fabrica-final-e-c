@@ -81,6 +81,15 @@ export type Theme = {
   is_active: boolean
 }
 
+export type SectionStyle = "video" | "image"
+
+export type ThemeSectionSettings = {
+  showTicker: boolean
+  sectionStyles: {
+    homeHero: SectionStyle
+  }
+}
+
 export type OrderPolicies = {
   shippingAmount: number
   freeShippingThreshold: number
@@ -91,6 +100,7 @@ export type OrderPolicies = {
   shippoLabelFileType: ShippoLabelFileType
   coupons: Coupon[]
   activeThemeName: string
+  themeSettings: ThemeSectionSettings
 }
 
 export type ShippingRateOption = {
@@ -168,6 +178,12 @@ export const emptyPolicies: OrderPolicies = {
   shippoLabelFileType: "PDF_4x6",
   coupons: [],
   activeThemeName: "default",
+  themeSettings: {
+    showTicker: true,
+    sectionStyles: {
+      homeHero: "video",
+    },
+  },
 }
 
 export const orderStatuses: Array<{ value: OrderStatus; label: string }> = [

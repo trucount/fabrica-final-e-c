@@ -313,9 +313,6 @@ export function generateOrderPdfHtml(order: CustomerOrder, brandName: string, st
       Thank you for your order. Please keep this receipt for your records.
     </div>
     
-    <div class="footer">
-      Powered by Sparrow AI Solutions
-    </div>
   </div>
 </body>
 </html>

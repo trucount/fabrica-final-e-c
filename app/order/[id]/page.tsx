@@ -11,6 +11,7 @@ import { type CustomerOrder, loadOrders, orderStatuses } from "@/lib/client-comm
 import type { SiteContent } from "@/lib/site-content"
 import { Download, Printer } from "lucide-react"
 import { generateOrderPdfHtml } from "@/lib/pdf-generator"
+import { useTheme } from "@/components/theme-context"
 
 export default function OrderDetailsPage() {
   const params = useParams<{ id: string }>()
@@ -18,6 +19,8 @@ export default function OrderDetailsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
   const [brandName, setBrandName] = useState("")
+  const { activeTheme } = useTheme()
+  const isDefaultTheme = activeTheme?.name ? activeTheme.name === "default" : true
 
   useEffect(() => {
     loadOrders({ id: params.id })
@@ -83,7 +86,7 @@ export default function OrderDetailsPage() {
         </div>
 
         <section id="order-receipt" className="overflow-hidden rounded-2xl border bg-background shadow-sm print:rounded-none print:border-0 print:shadow-none">
-          <div className="bg-foreground p-5 text-background sm:p-8 print:bg-white print:text-black">
+          <div className={`bg-foreground p-5 sm:p-8 print:bg-white print:text-black ${isDefaultTheme ? "text-white" : "text-background"}`}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <div className="flex items-center gap-2">
@@ -98,7 +101,7 @@ export default function OrderDetailsPage() {
                 </div>
                 <p className="mt-2 text-sm opacity-80">Thank you for your order. Keep this receipt for your records.</p>
               </div>
-              <div className="rounded-xl bg-background/10 p-4 text-sm print:border print:bg-white">
+              <div className={`rounded-xl bg-background/10 p-4 text-sm print:border print:bg-white ${isDefaultTheme ? "text-white" : ""}`}>
                 <p className="opacity-70">Order ID</p>
                 <p className="font-semibold">{order.id}</p>
                 <p className="mt-3 opacity-70">Placed on</p>
@@ -163,18 +166,7 @@ export default function OrderDetailsPage() {
           </div>
         </section>
       </main>
-      <footer className="mt-12 pb-8 text-center print:hidden">
-        <div className="flex flex-col items-center gap-4">
-          <Image
-            src="/logo-black.png"
-            alt="ASTERA Logo"
-            width={20}
-            height={20}
-            className="h-5 w-auto object-contain opacity-50"
-          />
-          <p className="text-xs tracking-widest text-muted-foreground uppercase">Powered by Sparrow AI Solutions</p>
-        </div>
-      </footer>
+
     </div>
   )
 }
