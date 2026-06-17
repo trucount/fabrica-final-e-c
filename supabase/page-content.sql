@@ -27,6 +27,8 @@ values
       "heroSubtitle": "Discover timeless pieces crafted for the modern wardrobe",
       "heroVideoUrl": "https://www.youtube.com/embed/u9FEg5qur14?autoplay=1&mute=1&loop=1&playlist=u9FEg5qur14&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1",
       "heroImageUrls": ["/thudarum-taupe-suit-hero.jpg", "/thudarum-burgundy-evening-suit.jpg", "/thudarum-sky-blue-blazer.jpg", "/thudarum-navy-velvet-blazer.jpg"],
+      "heroImageUrlsDesktop": ["/thudarum-taupe-suit-hero.jpg", "/thudarum-burgundy-evening-suit.jpg", "/thudarum-sky-blue-blazer.jpg", "/thudarum-navy-velvet-blazer.jpg"],
+      "heroImageUrlsMobile": ["/thudarum-taupe-suit-detail.jpg", "/thudarum-burgundy-suit-detail.jpg", "/thudarum-sky-blue-detail.jpg", "/thudarum-navy-velvet-detail.jpg"],
       "collectionsTitle": "Collections",
       "newArrivalsTitle": "New Arrivals",
       "bestSellersTitle": "Best Sellers",

@@ -5,27 +5,23 @@ import { Truck } from "lucide-react"
 import { useTheme } from "@/components/theme-context"
 
 export function ShippingTicker() {
-  const { activeTheme } = useTheme()
+  const { activeTheme, policies, isLoading: isThemeLoading } = useTheme()
   const [tickerMessages, setTickerMessages] = useState<string[]>([])
-  const [showTicker, setShowTicker] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/site-content").then((response) => response.ok ? response.json() : null),
-      fetch("/api/commerce/policies").then((response) => response.ok ? response.json() : null),
-    ])
-      .then(([content, policies]) => {
+    fetch("/api/site-content")
+      .then((response) => response.ok ? response.json() : null)
+      .then((content) => {
         if (content?.tickerMessages) {
           setTickerMessages(content.tickerMessages)
         }
-        setShowTicker(policies?.themeSettings?.showTicker !== false)
       })
       .catch(() => setTickerMessages([]))
       .finally(() => setIsLoading(false))
   }, [])
 
-  if (isLoading || !showTicker || !tickerMessages.length) return null
+  if (isLoading || isThemeLoading || !policies || policies.themeSettings.showTicker === false || !tickerMessages.length) return null
 
   const isDefaultTheme = activeTheme?.name === "default"
   const textColorClass = isDefaultTheme ? "text-white" : "text-primary-foreground"

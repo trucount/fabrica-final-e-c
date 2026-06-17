@@ -3,6 +3,8 @@ export type HomeContent = {
   heroSubtitle: string
   heroVideoUrl: string
   heroImageUrls: string[]
+  heroImageUrlsDesktop: string[]
+  heroImageUrlsMobile: string[]
   collectionsTitle: string
   newArrivalsTitle: string
   bestSellersTitle: string
@@ -80,6 +82,8 @@ function parseHomeContent(content: unknown): HomeContent {
     heroSubtitle: getString(content, "heroSubtitle"),
     heroVideoUrl: getOptionalString(content, "heroVideoUrl", "https://www.youtube.com/embed/u9FEg5qur14?autoplay=1&mute=1&loop=1&playlist=u9FEg5qur14&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1"),
     heroImageUrls: getOptionalStringList(content, "heroImageUrls", ["/thudarum-taupe-suit-hero.jpg", "/thudarum-burgundy-evening-suit.jpg", "/thudarum-sky-blue-blazer.jpg", "/thudarum-navy-velvet-blazer.jpg"]),
+    heroImageUrlsDesktop: getOptionalStringList(content, "heroImageUrlsDesktop", getOptionalStringList(content, "heroImageUrls", ["/thudarum-taupe-suit-hero.jpg", "/thudarum-burgundy-evening-suit.jpg", "/thudarum-sky-blue-blazer.jpg", "/thudarum-navy-velvet-blazer.jpg"])),
+    heroImageUrlsMobile: getOptionalStringList(content, "heroImageUrlsMobile", getOptionalStringList(content, "heroImageUrls", ["/thudarum-taupe-suit-hero.jpg", "/thudarum-burgundy-evening-suit.jpg", "/thudarum-sky-blue-blazer.jpg", "/thudarum-navy-velvet-blazer.jpg"])),
     collectionsTitle: getString(content, "collectionsTitle"),
     newArrivalsTitle: getString(content, "newArrivalsTitle"),
     bestSellersTitle: getString(content, "bestSellersTitle"),

@@ -90,9 +90,9 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
           <div className="absolute inset-0 w-full h-full">
             {policies.themeSettings.sectionStyles.homeHero === "image" ? (
               <div className="absolute inset-0 grid grid-cols-2 gap-1 opacity-70">
-                {homeContent.heroImageUrls.slice(0, 4).map((imageUrl, index) => (
+                {homeContent.heroImageUrlsDesktop.slice(0, 4).map((imageUrl, index) => (
                   <div key={`${imageUrl}-${index}`} className="relative overflow-hidden">
-                    <Image src={imageUrl} alt={`Hero image ${index + 1}`} fill className="object-cover" />
+                    <Image src={imageUrl} alt={`Desktop hero image ${index + 1}`} fill className="object-cover" />
                   </div>
                 ))}
               </div>
@@ -112,19 +112,29 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
             {policies.themeSettings.sectionStyles.homeHero === "image" ? (
               <div className="mx-auto max-w-2xl rounded-lg border bg-background/85 p-4 text-left shadow-sm">
                 <h2 className="mb-3 font-serif text-2xl font-semibold">Hero IMAGE carousel</h2>
-                <p className="mb-4 text-sm text-muted-foreground">IMAGE style hides the hero text and button on the live home page. Add four image URLs below.</p>
+                <p className="mb-4 text-sm text-muted-foreground">IMAGE style hides the hero text and button on the live home page. Add four desktop and four mobile image URLs below.</p>
                 <input type="hidden" name="heroTitle" defaultValue={homeContent.heroTitle} />
                 <input type="hidden" name="heroSubtitle" defaultValue={homeContent.heroSubtitle} />
                 <input type="hidden" name="heroVideoUrl" defaultValue={homeContent.heroVideoUrl} />
-                <div className="space-y-3">
-                  {homeContent.heroImageUrls.slice(0, 4).map((imageUrl, index) => (
-                    <Input key={index} name="heroImageUrls" defaultValue={imageUrl} aria-label={`Hero carousel image ${index + 1}`} className="border-dashed" />
-                  ))}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold">Desktop images</h3>
+                    {homeContent.heroImageUrlsDesktop.slice(0, 4).map((imageUrl, index) => (
+                      <Input key={index} name="heroImageUrlsDesktop" defaultValue={imageUrl} aria-label={`Desktop hero carousel image ${index + 1}`} className="border-dashed" />
+                    ))}
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold">Mobile images</h3>
+                    {homeContent.heroImageUrlsMobile.slice(0, 4).map((imageUrl, index) => (
+                      <Input key={index} name="heroImageUrlsMobile" defaultValue={imageUrl} aria-label={`Mobile hero carousel image ${index + 1}`} className="border-dashed" />
+                    ))}
+                  </div>
                 </div>
               </div>
             ) : (
               <>
-                {homeContent.heroImageUrls.slice(0, 4).map((imageUrl, index) => <input key={index} type="hidden" name="heroImageUrls" defaultValue={imageUrl} />)}
+                {homeContent.heroImageUrlsDesktop.slice(0, 4).map((imageUrl, index) => <input key={`desktop-${index}`} type="hidden" name="heroImageUrlsDesktop" defaultValue={imageUrl} />)}
+                {homeContent.heroImageUrlsMobile.slice(0, 4).map((imageUrl, index) => <input key={`mobile-${index}`} type="hidden" name="heroImageUrlsMobile" defaultValue={imageUrl} />)}
                 <Input
                   name="heroTitle"
                   defaultValue={homeContent.heroTitle}

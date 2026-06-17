@@ -5,6 +5,7 @@ import { loadPolicies, loadThemes, type Theme, type OrderPolicies } from "@/lib/
 
 type ThemeContextType = {
   activeTheme: Theme | null
+  policies: OrderPolicies | null
   themes: Theme[]
   isLoading: boolean
   refresh: () => Promise<void>
@@ -15,16 +16,24 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [activeTheme, setActiveTheme] = useState<Theme | null>(null)
   const [themes, setThemes] = useState<Theme[]>([])
+  const [policies, setPolicies] = useState<OrderPolicies | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const refresh = async () => {
     try {
-      const [allThemes, policies] = await Promise.all([loadThemes(), loadPolicies()])
-      setThemes(allThemes)
-      const active = allThemes.find((t) => t.name === policies.activeThemeName) || allThemes.find((t) => t.name === "default") || allThemes[0] || null
-      setActiveTheme(active)
-    } catch (error) {
-      console.error("Failed to load themes:", error)
+      const nextPolicies = await loadPolicies()
+      setPolicies(nextPolicies)
+
+      try {
+        const allThemes = await loadThemes()
+        setThemes(allThemes)
+        const active = allThemes.find((t) => t.name === nextPolicies.activeThemeName) || allThemes.find((t) => t.name === "default") || allThemes[0] || null
+        setActiveTheme(active)
+      } catch (themeError) {
+        console.error("Failed to load themes:", themeError)
+      }
+    } catch (policyError) {
+      console.error("Failed to load policies:", policyError)
     } finally {
       setIsLoading(false)
     }
@@ -46,7 +55,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [activeTheme])
 
   return (
-    <ThemeContext.Provider value={{ activeTheme, themes, isLoading, refresh }}>
+    <ThemeContext.Provider value={{ activeTheme, policies, themes, isLoading, refresh }}>
       {children}
     </ThemeContext.Provider>
   )

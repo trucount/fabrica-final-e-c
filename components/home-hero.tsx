@@ -10,25 +10,41 @@ type HomeHeroProps = {
 }
 
 export function HomeHero({ content, style }: HomeHeroProps) {
-  const imageUrls = content.heroImageUrls.slice(0, 4)
+  const desktopImageUrls = content.heroImageUrlsDesktop.slice(0, 4)
+  const mobileImageUrls = content.heroImageUrlsMobile.slice(0, 4)
 
   return (
     <section className="relative h-[60vh] sm:h-[70vh] flex items-center justify-center bg-black overflow-hidden">
       <div className="absolute inset-0 w-full h-full">
         {style === "image" ? (
-          <div className="absolute inset-0">
-            {imageUrls.map((imageUrl, index) => (
-              <Image
-                key={`${imageUrl}-${index}`}
-                src={imageUrl}
-                alt="Hero carousel image"
-                fill
-                priority={index === 0}
-                className="object-cover opacity-0 animate-hero-image-carousel"
-                style={{ animationDelay: `${index * 5}s` }}
-              />
-            ))}
-          </div>
+          <>
+            <div className="absolute inset-0 md:hidden">
+              {mobileImageUrls.map((imageUrl, index) => (
+                <Image
+                  key={`mobile-${imageUrl}-${index}`}
+                  src={imageUrl}
+                  alt="Mobile hero carousel image"
+                  fill
+                  priority={index === 0}
+                  className="object-cover opacity-0 animate-hero-image-carousel"
+                  style={{ animationDelay: `${index * 5}s` }}
+                />
+              ))}
+            </div>
+            <div className="absolute inset-0 hidden md:block">
+              {desktopImageUrls.map((imageUrl, index) => (
+                <Image
+                  key={`desktop-${imageUrl}-${index}`}
+                  src={imageUrl}
+                  alt="Desktop hero carousel image"
+                  fill
+                  priority={index === 0}
+                  className="object-cover opacity-0 animate-hero-image-carousel"
+                  style={{ animationDelay: `${index * 5}s` }}
+                />
+              ))}
+            </div>
+          </>
         ) : (
           <iframe
             className="absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2"
