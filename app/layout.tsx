@@ -20,39 +20,36 @@ const playfair = Playfair_Display({
 const umamiWebsiteId = process.env.UMAMI_WEBSITE_ID ?? "c20d65b2-a78a-44f3-9d1b-62abfcb63d56"
 
 export const metadata: Metadata = {
-  applicationName: "ASTERA",
+  applicationName: "FABRICA",
   title: {
-    default: "ASTERA | Premium 925 Silver Jewelry",
-    template: "%s | ASTERA",
+    default: "FABRICA - HOST YOUR OWN E-COMMERCE IN MIN",
+    template: "%s | FABRICA",
   },
   description:
-    "Shop ASTERA for premium 925 sterling silver jewelry, including elegant rings, necklaces, bracelets, and everyday silver jewels.",
+    "FABRICA - HOST YOUR OWN E-COMMERCE IN MIN. The ultimate solution for launching your online store quickly and efficiently.",
   keywords: [
-    "ASTERA",
-    "ASTERA925",
-    "925 silver jewelry",
-    "premium silver jewels",
-    "sterling silver jewelry",
-    "silver rings",
-    "silver necklaces",
-    "silver bracelets",
+    "FABRICA",
+    "e-commerce",
+    "online store",
+    "host your own e-commerce",
+    "quick e-commerce setup",
   ],
   generator: "saprrow",
     verification: {
     google: "7QACTD1eG0dTRZ1wKGbWE9O4Qe4g_DJtDi7rcNYeEO4",
   },
   openGraph: {
-    title: "ASTERA | Premium 925 Silver Jewelry",
+    title: "FABRICA - HOST YOUR OWN E-COMMERCE IN MIN",
     description:
-      "Discover ASTERA premium 925 sterling silver jewelry crafted for timeless everyday elegance.",
-    siteName: "ASTERA",
+      "FABRICA - HOST YOUR OWN E-COMMERCE IN MIN. The ultimate solution for launching your online store quickly and efficiently.",
+    siteName: "FABRICA",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ASTERA | Premium 925 Silver Jewelry",
+    title: "FABRICA - HOST YOUR OWN E-COMMERCE IN MIN",
     description:
-      "Discover ASTERA premium 925 sterling silver jewelry crafted for timeless everyday elegance.",
+      "FABRICA - HOST YOUR OWN E-COMMERCE IN MIN. The ultimate solution for launching your online store quickly and efficiently.",
   },
   icons: {
     icon: [

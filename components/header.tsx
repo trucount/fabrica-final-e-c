@@ -52,13 +52,7 @@ export function Header() {
     <header className="relative w-full border-b border-border bg-background">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <Link href={homeHref} className="flex items-center gap-2 font-serif text-2xl font-semibold tracking-tight">
-          <Image
-            src="/logo-black.png"
-            alt="ASTERA Logo"
-            width={32}
-            height={32}
-            className="h-8 w-auto object-contain dark:invert"
-          />
+
           <span>{brandName}</span>
         </Link>
 
@@ -106,13 +100,7 @@ export function Header() {
             >
               <div className="flex flex-col gap-8 pt-8">
                 <div className="flex items-center gap-2 font-serif text-2xl font-semibold tracking-tight">
-                  <Image
-                    src="/logo-black.png"
-                    alt="ASTERA Logo"
-                    width={32}
-                    height={32}
-                    className="h-8 w-auto object-contain dark:invert"
-                  />
+
                   <span>{brandName}</span>
                 </div>
 

@@ -94,13 +94,7 @@ export default async function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             <div>
               <h3 className="flex items-center gap-2 font-serif text-xl font-semibold mb-4">
-                <Image
-                  src="/logo-black.png"
-                  alt="ASTERA Logo"
-                  width={24}
-                  height={24}
-                  className="h-6 w-auto object-contain dark:invert"
-                />
+
                 <span>{siteContent.brandName}</span>
               </h3>
               <p className="text-sm text-muted-foreground">{homeContent.footerTagline}</p>
