@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { Bot, Send, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useTheme } from "@/components/theme-context"
 import type { SiteContent } from "@/lib/site-content"
 
 type Message = { role: "user" | "assistant"; content: string }
@@ -58,6 +59,7 @@ function renderMessage(content: string) {
 
 export function SparrowChatbot() {
   const pathname = usePathname()
+  const { activeTheme } = useTheme()
   const [open, setOpen] = useState(false)
   const [brandName, setBrandName] = useState("")
   const [input, setInput] = useState("")
@@ -117,10 +119,10 @@ export function SparrowChatbot() {
         <section className="fixed inset-0 flex flex-col overflow-hidden border bg-background shadow-2xl sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[620px] sm:w-[390px] sm:rounded-3xl">
           <div className="flex items-center justify-between border-b bg-primary px-4 py-3 text-primary-foreground">
             <div>
-              <div className="font-serif text-lg font-semibold leading-tight">{title}</div>
-              <div className="text-xs text-primary-foreground/75">About, policies, shipping, returns & contact</div>
+              <div className={`font-serif text-lg font-semibold leading-tight ${activeTheme?.name === "default" ? "text-white" : ""}`}>{title}</div>
+              <div className={`text-xs ${activeTheme?.name === "default" ? "text-white/75" : "text-primary-foreground/75"}`}>About, policies, shipping, returns & contact</div>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"><X className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className={`${activeTheme?.name === "default" ? "text-white hover:bg-white/10 hover:text-white" : "text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"}`}><X className="h-5 w-5" /></Button>
           </div>
           <div className="flex-1 space-y-3 overflow-y-auto bg-secondary/30 p-4">
             {messages.map((message, index) => (
