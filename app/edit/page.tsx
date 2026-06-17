@@ -14,6 +14,7 @@ import { getAboutContent } from "@/lib/about-content"
 import { getHomeContent } from "@/lib/home-content"
 import { getSiteContent } from "@/lib/site-content"
 import { getCollections } from "@/lib/collections-data"
+import { getCommercePolicies } from "@/lib/commerce-server"
 import { loginToHomeEdit, logoutFromEdit, saveEditedHomeContent } from "./actions"
 import { hasEditPageAccess } from "./auth"
 
@@ -28,11 +29,12 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
     return <EditLoginPage error={params.error === "1" || params.error === "auth"} />
   }
 
-  const [aboutContent, homeContent, siteContent, collections] = await Promise.all([
+  const [aboutContent, homeContent, siteContent, collections, policies] = await Promise.all([
     getAboutContent(),
     getHomeContent(),
     getSiteContent(),
     getCollections(),
+    getCommercePolicies(),
   ])
 
   return (
@@ -86,39 +88,67 @@ export default async function EditHomePage({ searchParams }: EditHomePageProps) 
         </section>
         <section className="relative h-[60vh] sm:h-[70vh] flex items-center justify-center bg-black overflow-hidden">
           <div className="absolute inset-0 w-full h-full">
-            <iframe
-              className="absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2"
-              src={homeContent.heroVideoUrl}
-              title="Background video"
-              allow="autoplay; encrypted-media"
-              style={{ pointerEvents: "none" }}
-            />
+            {policies.themeSettings.sectionStyles.homeHero === "image" ? (
+              <div className="absolute inset-0 grid grid-cols-2 gap-1 opacity-70">
+                {homeContent.heroImageUrls.slice(0, 4).map((imageUrl, index) => (
+                  <div key={`${imageUrl}-${index}`} className="relative overflow-hidden">
+                    <Image src={imageUrl} alt={`Hero image ${index + 1}`} fill className="object-cover" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <iframe
+                className="absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2"
+                src={homeContent.heroVideoUrl}
+                title="Background video"
+                allow="autoplay; encrypted-media"
+                style={{ pointerEvents: "none" }}
+              />
+            )}
             <div className="absolute inset-0 bg-black/40" />
           </div>
 
           <div className="relative z-10 text-center px-4 w-full max-w-4xl">
-            <Input
-              name="heroTitle"
-              defaultValue={homeContent.heroTitle}
-              aria-label="Home hero title"
-              className="h-auto border-dashed bg-background/75 text-center font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-4 sm:mb-6 tracking-tight text-balance text-primary-foreground"
-            />
-            <Input
-              name="heroVideoUrl"
-              defaultValue={homeContent.heroVideoUrl}
-              aria-label="Home hero video URL"
-              className="mx-auto mb-4 max-w-2xl border-dashed bg-background/75 text-center text-sm text-primary-foreground/80"
-            />
-            <Textarea
-              name="heroSubtitle"
-              defaultValue={homeContent.heroSubtitle}
-              aria-label="Home hero subtitle"
-              className="mx-auto mb-6 sm:mb-8 max-w-2xl resize-none border-dashed bg-background/75 text-center text-base sm:text-lg md:text-xl text-muted-foreground"
-              rows={2}
-            />
-            <Button asChild size="lg" className="h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
-              <Link href="/edit/collections">Explore Collection</Link>
-            </Button>
+            {policies.themeSettings.sectionStyles.homeHero === "image" ? (
+              <div className="mx-auto max-w-2xl rounded-lg border bg-background/85 p-4 text-left shadow-sm">
+                <h2 className="mb-3 font-serif text-2xl font-semibold">Hero IMAGE carousel</h2>
+                <p className="mb-4 text-sm text-muted-foreground">IMAGE style hides the hero text and button on the live home page. Add four image URLs below.</p>
+                <input type="hidden" name="heroTitle" defaultValue={homeContent.heroTitle} />
+                <input type="hidden" name="heroSubtitle" defaultValue={homeContent.heroSubtitle} />
+                <input type="hidden" name="heroVideoUrl" defaultValue={homeContent.heroVideoUrl} />
+                <div className="space-y-3">
+                  {homeContent.heroImageUrls.slice(0, 4).map((imageUrl, index) => (
+                    <Input key={index} name="heroImageUrls" defaultValue={imageUrl} aria-label={`Hero carousel image ${index + 1}`} className="border-dashed" />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <>
+                {homeContent.heroImageUrls.slice(0, 4).map((imageUrl, index) => <input key={index} type="hidden" name="heroImageUrls" defaultValue={imageUrl} />)}
+                <Input
+                  name="heroTitle"
+                  defaultValue={homeContent.heroTitle}
+                  aria-label="Home hero title"
+                  className="h-auto border-dashed bg-background/75 text-center font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-4 sm:mb-6 tracking-tight text-balance text-primary-foreground"
+                />
+                <Input
+                  name="heroVideoUrl"
+                  defaultValue={homeContent.heroVideoUrl}
+                  aria-label="Home hero video URL"
+                  className="mx-auto mb-4 max-w-2xl border-dashed bg-background/75 text-center text-sm text-primary-foreground/80"
+                />
+                <Textarea
+                  name="heroSubtitle"
+                  defaultValue={homeContent.heroSubtitle}
+                  aria-label="Home hero subtitle"
+                  className="mx-auto mb-6 sm:mb-8 max-w-2xl resize-none border-dashed bg-background/75 text-center text-base sm:text-lg md:text-xl text-muted-foreground"
+                  rows={2}
+                />
+                <Button asChild size="lg" className="h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
+                  <Link href="/edit/collections">Explore Collection</Link>
+                </Button>
+              </>
+            )}
           </div>
         </section>
 

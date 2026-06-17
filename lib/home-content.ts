@@ -2,6 +2,7 @@ export type HomeContent = {
   heroTitle: string
   heroSubtitle: string
   heroVideoUrl: string
+  heroImageUrls: string[]
   collectionsTitle: string
   newArrivalsTitle: string
   bestSellersTitle: string
@@ -78,6 +79,7 @@ function parseHomeContent(content: unknown): HomeContent {
     heroTitle: getString(content, "heroTitle"),
     heroSubtitle: getString(content, "heroSubtitle"),
     heroVideoUrl: getOptionalString(content, "heroVideoUrl", "https://www.youtube.com/embed/u9FEg5qur14?autoplay=1&mute=1&loop=1&playlist=u9FEg5qur14&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1"),
+    heroImageUrls: getOptionalStringList(content, "heroImageUrls", ["/thudarum-taupe-suit-hero.jpg", "/thudarum-burgundy-evening-suit.jpg", "/thudarum-sky-blue-blazer.jpg", "/thudarum-navy-velvet-blazer.jpg"]),
     collectionsTitle: getString(content, "collectionsTitle"),
     newArrivalsTitle: getString(content, "newArrivalsTitle"),
     bestSellersTitle: getString(content, "bestSellersTitle"),
@@ -102,4 +104,11 @@ function getOptionalString(content: Record<string, unknown>, key: string, fallba
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function getOptionalStringList(content: Record<string, unknown>, key: string, fallback: string[]) {
+  const value = content[key]
+  if (!Array.isArray(value)) return fallback
+  const strings = value.filter((item): item is string => typeof item === "string" && Boolean(item.trim()))
+  return strings.length ? strings : fallback
 }

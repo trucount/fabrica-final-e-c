@@ -16,7 +16,6 @@ import {
   type OrderPolicies,
   type OrderStatus,
   type Theme,
-  type ThemeColors,
   emptyPolicies,
   loadOrders,
   loadPolicies,
@@ -24,8 +23,6 @@ import {
   orderStatuses,
   persistOrderStatus,
   persistPolicies,
-  persistTheme,
-  deleteTheme,
 } from "@/lib/client-commerce"
 import { useTheme } from "@/components/theme-context"
 import { Plus, Save, Trash2 } from "lucide-react"
@@ -37,15 +34,113 @@ const labelFileTypes = ["PNG", "PNG_2.3x7.5", "PDF", "PDF_2.3x7.5", "PDF_4x6", "
 const distanceUnits = ["in", "cm"] as const
 const massUnits = ["lb", "oz", "g", "kg"] as const
 
-export function AdminPoliciesPanel() {
+export function AdminThemePanel() {
   const { toast } = useToast()
   const { refresh: refreshGlobalTheme } = useTheme()
   const [policies, setPolicies] = useState<OrderPolicies>(emptyPolicies)
-  const [policiesError, setPoliciesError] = useState("")
-  const [isSavingPolicies, setIsSavingPolicies] = useState(false)
   const [themes, setThemes] = useState<Theme[]>([])
+  const [error, setError] = useState("")
+  const [isSavingPolicies, setIsSavingPolicies] = useState(false)
   const [isSavingTheme, setIsSavingTheme] = useState(false)
 
+  useEffect(() => {
+    Promise.all([loadPolicies(), loadThemes()])
+      .then(([nextPolicies, nextThemes]) => {
+        setPolicies(nextPolicies)
+        setThemes(nextThemes)
+        setError("")
+      })
+      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "Supabase theme data could not be loaded."))
+  }, [])
+
+  const saveThemePolicies = async (nextPolicies = policies) => {
+    setIsSavingPolicies(true)
+    try {
+      const saved = await persistPolicies(nextPolicies)
+      setPolicies(saved)
+      setError("")
+      toast({ title: "Theme settings saved", description: "Theme, section style, and ticker visibility were saved to Supabase." })
+      await refreshGlobalTheme()
+    } catch (saveError) {
+      const message = saveError instanceof Error ? saveError.message : "Supabase save failed."
+      setError(message)
+      toast({ title: "Theme settings save failed", description: message, variant: "destructive" })
+    } finally {
+      setIsSavingPolicies(false)
+    }
+  }
+
+  const handleThemeChange = async (themeName: string) => {
+    const nextPolicies = { ...policies, activeThemeName: themeName }
+    setPolicies(nextPolicies)
+    if (themeName !== "__create_new__") await saveThemePolicies(nextPolicies)
+  }
+
+  const handleThemeSaved = async () => {
+    setIsSavingTheme(true)
+    try {
+      setThemes(await loadThemes())
+      toast({ title: "Theme saved", description: "Theme configuration was saved to Supabase." })
+      await refreshGlobalTheme()
+      setPolicies({ ...policies, activeThemeName: "default" })
+    } catch (saveError) {
+      toast({ title: "Error", description: saveError instanceof Error ? saveError.message : "Failed to load themes.", variant: "destructive" })
+    } finally {
+      setIsSavingTheme(false)
+    }
+  }
+
+  const nextHomeHeroStyle = (homeHero: OrderPolicies["themeSettings"]["sectionStyles"]["homeHero"]) => ({
+    ...policies,
+    themeSettings: {
+      ...policies.themeSettings,
+      sectionStyles: { ...policies.themeSettings.sectionStyles, homeHero },
+    },
+  })
+
+  return (
+    <div className="space-y-8">
+      <section className="rounded-lg border p-4 sm:p-6">
+        <h2 className="font-serif text-2xl font-semibold mb-4">Theme Management</h2>
+        <ThemeManager themes={themes} activeThemeName={policies.activeThemeName} onThemeChange={handleThemeChange} onThemeSaved={handleThemeSaved} isSaving={isSavingTheme} />
+      </section>
+      <section className="rounded-lg border p-4 sm:p-6">
+        <div className="mb-4">
+          <h2 className="font-serif text-2xl font-semibold">Sections Style</h2>
+          <p className="text-sm text-muted-foreground">Choose whether specific website sections use video or image layouts.</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Home hero (/ page)</Label>
+            <Select value={policies.themeSettings.sectionStyles.homeHero} onValueChange={(value: "video" | "image") => setPolicies(nextHomeHeroStyle(value))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="video">Video style</SelectItem>
+                <SelectItem value="image">IMAGE style carousel</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">IMAGE style hides hero text/buttons and rotates four hero images.</p>
+          </div>
+          <label className="flex items-center gap-3 rounded-md border p-3 text-sm">
+            <input type="checkbox" checked={policies.themeSettings.showTicker} onChange={(event) => setPolicies({ ...policies, themeSettings: { ...policies.themeSettings, showTicker: event.target.checked } })} />
+            <span><span className="font-medium">Show moving bar above header</span><span className="block text-xs text-muted-foreground">Toggle the shipping/message ticker across the site.</span></span>
+          </label>
+        </div>
+        {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
+        <Button className="mt-4" onClick={() => void saveThemePolicies()} disabled={isSavingPolicies}>
+          <Save className="mr-2 h-4 w-4" />
+          {isSavingPolicies ? "Saving..." : "Save Theme Settings"}
+        </Button>
+      </section>
+    </div>
+  )
+}
+
+export function AdminPoliciesPanel() {
+  const { toast } = useToast()
+  const [policies, setPolicies] = useState<OrderPolicies>(emptyPolicies)
+  const [policiesError, setPoliciesError] = useState("")
+  const [isSavingPolicies, setIsSavingPolicies] = useState(false)
   const [coupon, setCoupon] = useState<Coupon>({
     code: "",
     label: "",
@@ -56,10 +151,9 @@ export function AdminPoliciesPanel() {
   })
 
   useEffect(() => {
-    Promise.all([loadPolicies(), loadThemes()])
-      .then(([nextPolicies, nextThemes]) => {
+    loadPolicies()
+      .then((nextPolicies) => {
         setPolicies(nextPolicies)
-        setThemes(nextThemes)
         setPoliciesError("")
       })
       .catch((error) => setPoliciesError(error instanceof Error ? error.message : "Supabase data could not be loaded."))
@@ -72,39 +166,12 @@ export function AdminPoliciesPanel() {
       setPolicies(saved)
       setPoliciesError("")
       toast({ title: "Policies saved", description: "Shipping, tax, and coupons were saved to Supabase." })
-      void refreshGlobalTheme()
     } catch (error) {
       const message = error instanceof Error ? error.message : "Supabase save failed."
       setPoliciesError(message)
       toast({ title: "Policy save failed", description: message, variant: "destructive" })
     } finally {
       setIsSavingPolicies(false)
-    }
-  }
-
-  const handleThemeChange = async (themeName: string) => {
-    if (themeName === "__create_new__") {
-      // Keep the selection as is, ThemeManager will handle the UI
-      setPolicies({ ...policies, activeThemeName: themeName })
-    } else {
-      setPolicies({ ...policies, activeThemeName: themeName })
-      await save({ ...policies, activeThemeName: themeName })
-    }
-  }
-
-  const handleThemeSaved = async () => {
-    setIsSavingTheme(true)
-    try {
-      const nextThemes = await loadThemes()
-      setThemes(nextThemes)
-      toast({ title: "Theme saved", description: "Theme configuration was saved to Supabase." })
-      await refreshGlobalTheme()
-      // Reset to default theme after creation
-      setPolicies({ ...policies, activeThemeName: "default" })
-    } catch (error) {
-      toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to load themes.", variant: "destructive" })
-    } finally {
-      setIsSavingTheme(false)
     }
   }
 
@@ -199,17 +266,6 @@ export function AdminPoliciesPanel() {
           <Save className="mr-2 h-4 w-4" />
           {isSavingPolicies ? "Saving..." : "Save Shippo Settings"}
         </Button>
-      </section>
-
-      <section className="rounded-lg border p-4 sm:p-6">
-        <h2 className="font-serif text-2xl font-semibold mb-4">Theme Management</h2>
-        <ThemeManager
-          themes={themes}
-          activeThemeName={policies.activeThemeName}
-          onThemeChange={handleThemeChange}
-          onThemeSaved={handleThemeSaved}
-          isSaving={isSavingTheme}
-        />
       </section>
 
       <section className="rounded-lg border p-4 sm:p-6">

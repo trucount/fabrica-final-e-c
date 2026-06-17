@@ -46,6 +46,7 @@ export async function saveEditedHomeContent(formData: FormData) {
     heroTitle: getRequiredText(formData, "heroTitle", destination),
     heroSubtitle: getRequiredText(formData, "heroSubtitle", destination),
     heroVideoUrl: getRequiredText(formData, "heroVideoUrl", destination),
+    heroImageUrls: getRequiredTextList(formData, "heroImageUrls", destination).slice(0, 4),
     collectionsTitle: getRequiredText(formData, "collectionsTitle", destination),
     newArrivalsTitle: getRequiredText(formData, "newArrivalsTitle", destination),
     bestSellersTitle: getRequiredText(formData, "bestSellersTitle", destination),

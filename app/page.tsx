@@ -1,6 +1,6 @@
 import { Header } from "@/components/header"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { HomeHero } from "@/components/home-hero"
 import Link from "next/link"
 import { ProductGridCustom } from "@/components/product-grid-custom"
 import { CollectionsCarousel } from "@/components/collections-carousel"
@@ -10,47 +10,24 @@ import { getHomeContent } from "@/lib/home-content"
 import { getSiteContent } from "@/lib/site-content"
 import { getCollections } from "@/lib/collections-data"
 import { getProducts } from "@/lib/products-data"
+import { getCommercePolicies } from "@/lib/commerce-server"
 
 export default async function Home() {
-  const [aboutContent, homeContent, siteContent, collections, newArrivals, bestSellers] = await Promise.all([
+  const [aboutContent, homeContent, siteContent, collections, newArrivals, bestSellers, policies] = await Promise.all([
     getAboutContent(),
     getHomeContent(),
     getSiteContent(),
     getCollections(),
     getProducts({ section: "new_arrivals", limit: 4 }),
     getProducts({ section: "best_sellers", limit: 4 }),
+    getCommercePolicies(),
   ])
 
   return (
     <div className="min-h-screen">
       <Header />
 
-      <section className="relative h-[60vh] sm:h-[70vh] flex items-center justify-center bg-black overflow-hidden">
-        {/* YouTube video background */}
-        <div className="absolute inset-0 w-full h-full">
-          <iframe
-            className="absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2"
-            src={homeContent.heroVideoUrl}
-            title="Background video"
-            allow="autoplay; encrypted-media"
-            style={{ pointerEvents: "none" }}
-          />
-          {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
-
-        <div className="relative z-10 text-center px-4 text-primary-foreground">
-          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-4 sm:mb-6 tracking-tight text-balance drop-shadow-md text-primary-foreground">
-            {homeContent.heroTitle}
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto text-balance text-primary-foreground/95">
-            {homeContent.heroSubtitle}
-          </p>
-          <Button asChild size="lg" className="h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
-            <Link href="/collections">Explore Collection</Link>
-          </Button>
-        </div>
-      </section>
+      <HomeHero content={homeContent} style={policies.themeSettings.sectionStyles.homeHero} />
 
       {/* Collections Slider */}
       <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">

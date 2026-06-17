@@ -1,5 +1,5 @@
 import type { CartItem } from "@/components/cart-provider"
-import { emptyPolicies, type CommerceUser, type Coupon, type CustomerOrder, type OrderPolicies, type OrderStatus, type SavedAddress, type ShippingLabel, type ShippingRateOption, type ShippoLabelFileType } from "@/lib/client-commerce"
+import { emptyPolicies, type CommerceUser, type Coupon, type CustomerOrder, type OrderPolicies, type OrderStatus, type SavedAddress, type ShippingLabel, type ShippingRateOption, type ShippoLabelFileType, type Theme, type ThemeColors, type SectionStyle } from "@/lib/client-commerce"
 
 export type SupabaseSocialProvider = "clerk" | "google" | "github"
 
@@ -130,12 +130,23 @@ function mapShippingLabel(row: Record<string, unknown>): ShippingLabel {
   }
 }
 
+const defaultThemeColors: ThemeColors = {
+  background: "oklch(0.985 0 0)",
+  foreground: "oklch(0.145 0 0)",
+  primary: "oklch(0.205 0 0)",
+  primary_foreground: "oklch(0.985 0 0)",
+  secondary: "oklch(0.97 0 0)",
+  accent: "oklch(0.97 0 0)",
+  muted: "oklch(0.97 0 0)",
+  border: "oklch(0.922 0 0)",
+}
+
 function mapTheme(row: Record<string, unknown>): Theme {
   return {
     id: requireString(row.id),
     name: requireString(row.name),
     label: requireString(row.label),
-    colors: isRecord(row.colors) ? (row.colors as ThemeColors) : emptyPolicies.colors,
+    colors: isRecord(row.colors) ? (row.colors as ThemeColors) : defaultThemeColors,
     is_active: requireBoolean(row.is_active, true),
   }
 }
@@ -418,6 +429,20 @@ export async function getCommercePolicies(): Promise<OrderPolicies> {
     shippoLabelFileType: validShippoLabelFileType(policy.shippo_label_file_type),
     coupons: couponRows.map(mapCoupon),
     activeThemeName: requireString(policy.active_theme_name, "default"),
+    themeSettings: parseThemeSettings(policy),
+  }
+}
+
+function parseThemeSettings(policy: Record<string, unknown>) {
+  const rawStyles = policy.section_styles
+  const sectionStyles = typeof rawStyles === "object" && rawStyles !== null && !Array.isArray(rawStyles) ? rawStyles as Record<string, unknown> : {}
+  const homeHero: SectionStyle = sectionStyles.homeHero === "image" ? "image" : "video"
+
+  return {
+    showTicker: requireBoolean(policy.show_ticker, true),
+    sectionStyles: {
+      homeHero,
+    },
   }
 }
 
@@ -475,6 +500,8 @@ export async function saveCommercePolicies(policies: OrderPolicies) {
       shippo_parcel_mass_unit: policies.shippoParcelDefaults.massUnit,
       shippo_label_file_type: policies.shippoLabelFileType,
       active_theme_name: policies.activeThemeName,
+      show_ticker: policies.themeSettings.showTicker,
+      section_styles: policies.themeSettings.sectionStyles,
       updated_at: new Date().toISOString(),
     }),
   })

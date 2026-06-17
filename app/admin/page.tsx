@@ -22,7 +22,7 @@ import {
   updateAdminProduct,
 } from "./actions"
 import { hasAdminPageAccess } from "./auth"
-import { AdminOrdersPanel, AdminPoliciesPanel } from "@/components/admin-policies-orders"
+import { AdminOrdersPanel, AdminPoliciesPanel, AdminThemePanel } from "@/components/admin-policies-orders"
 import { AdminAnalyticsPanel, AdminUsersPanel } from "@/components/admin-users-analytics"
 
 type AdminPageProps = {
@@ -49,7 +49,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   ])
   const saved = typeof params.saved === "string" ? params.saved : ""
   const error = typeof params.error === "string" ? params.error : ""
-  const adminTabs = ["collections", "products", "policies", "orders", "users", "analytics"]
+  const adminTabs = ["collections", "products", "theme", "policies", "orders", "users", "analytics"]
   const defaultTab = typeof params.tab === "string" && adminTabs.includes(params.tab) ? params.tab : "collections"
   const defaultProductTab = productTabs.some((tab) => tab.section === params.productTab) ? String(params.productTab) : "general"
   const sectionLabels: Record<ProductSection, string> = {
@@ -78,9 +78,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
 
         <Tabs defaultValue={defaultTab} className="gap-6">
-          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:inline-grid lg:w-auto lg:grid-cols-6">
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:inline-grid lg:w-auto lg:grid-cols-7">
             <TabsTrigger value="collections">Collections</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="theme">Theme</TabsTrigger>
             <TabsTrigger value="policies">Policies</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
@@ -110,6 +111,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 </TabsContent>
               ))}
             </Tabs>
+          </TabsContent>
+
+          <TabsContent value="theme" className="space-y-8">
+            <AdminThemePanel />
           </TabsContent>
 
           <TabsContent value="policies" className="space-y-8">

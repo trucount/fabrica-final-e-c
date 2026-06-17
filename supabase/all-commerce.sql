@@ -9,6 +9,9 @@ create extension if not exists pgcrypto;
 create table if not exists public.site_content (
   id text primary key,
   content jsonb not null,
+  active_theme_name text not null default 'default',
+  show_ticker boolean not null default true,
+  section_styles jsonb not null default '{"homeHero":"video"}'::jsonb,
   updated_at timestamptz not null default now()
 );
 
@@ -32,6 +35,7 @@ values
       "heroTitle": "Refined Simplicity",
       "heroSubtitle": "Discover timeless pieces crafted for the modern wardrobe",
       "heroVideoUrl": "https://www.youtube.com/embed/u9FEg5qur14?autoplay=1&mute=1&loop=1&playlist=u9FEg5qur14&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1",
+      "heroImageUrls": ["/thudarum-taupe-suit-hero.jpg", "/thudarum-burgundy-evening-suit.jpg", "/thudarum-sky-blue-blazer.jpg", "/thudarum-navy-velvet-blazer.jpg"],
       "collectionsTitle": "Collections",
       "newArrivalsTitle": "New Arrivals",
       "bestSellersTitle": "Best Sellers",
@@ -325,6 +329,9 @@ create table if not exists public.order_policies (
   shippo_parcel_distance_unit text not null default 'in' check (shippo_parcel_distance_unit in ('in', 'cm')),
   shippo_parcel_mass_unit text not null default 'lb' check (shippo_parcel_mass_unit in ('lb', 'oz', 'g', 'kg')),
   shippo_label_file_type text not null default 'PDF_4x6' check (shippo_label_file_type in ('PNG', 'PNG_2.3x7.5', 'PDF', 'PDF_2.3x7.5', 'PDF_4x6', 'PDF_4x8', 'PDF_A4', 'PDF_A5', 'PDF_A6', 'ZPLII')),
+  active_theme_name text not null default 'default',
+  show_ticker boolean not null default true,
+  section_styles jsonb not null default '{"homeHero":"video"}'::jsonb,
   updated_at timestamptz not null default now()
 );
 
@@ -347,7 +354,10 @@ alter table public.order_policies
   add column if not exists shippo_parcel_weight numeric(10, 2) not null default 1,
   add column if not exists shippo_parcel_distance_unit text not null default 'in',
   add column if not exists shippo_parcel_mass_unit text not null default 'lb',
-  add column if not exists shippo_label_file_type text not null default 'PDF_4x6';
+  add column if not exists shippo_label_file_type text not null default 'PDF_4x6',
+  add column if not exists active_theme_name text not null default 'default',
+  add column if not exists show_ticker boolean not null default true,
+  add column if not exists section_styles jsonb not null default '{"homeHero":"video"}'::jsonb;
 
 insert into public.order_policies (id, shipping_amount, free_shipping_threshold, tax_rate, automatic_shipping_enabled, updated_at)
 values (true, 15, 200, 8, false, now())

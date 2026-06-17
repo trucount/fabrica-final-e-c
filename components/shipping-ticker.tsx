@@ -7,21 +7,25 @@ import { useTheme } from "@/components/theme-context"
 export function ShippingTicker() {
   const { activeTheme } = useTheme()
   const [tickerMessages, setTickerMessages] = useState<string[]>([])
+  const [showTicker, setShowTicker] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    fetch("/api/site-content")
-      .then((response) => response.ok ? response.json() : null)
-      .then((content) => {
+    Promise.all([
+      fetch("/api/site-content").then((response) => response.ok ? response.json() : null),
+      fetch("/api/commerce/policies").then((response) => response.ok ? response.json() : null),
+    ])
+      .then(([content, policies]) => {
         if (content?.tickerMessages) {
           setTickerMessages(content.tickerMessages)
         }
+        setShowTicker(policies?.themeSettings?.showTicker !== false)
       })
       .catch(() => setTickerMessages([]))
       .finally(() => setIsLoading(false))
   }, [])
 
-  if (isLoading || !tickerMessages.length) return null
+  if (isLoading || !showTicker || !tickerMessages.length) return null
 
   const isDefaultTheme = activeTheme?.name === "default"
   const textColorClass = isDefaultTheme ? "text-white" : "text-primary-foreground"
