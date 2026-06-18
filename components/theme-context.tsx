@@ -56,7 +56,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeContext.Provider value={{ activeTheme, policies, themes, isLoading, refresh }}>
-      {children}
+      <div className={isLoading ? "invisible" : "visible"}>
+        {children}
+      </div>
     </ThemeContext.Provider>
   )
 }

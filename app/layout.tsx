@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { ShippingTicker } from "@/components/shipping-ticker"
 import { SparrowChatbot } from "@/components/sparrow-chatbot"
 import { ThemeProvider } from "@/components/theme-context"
+import { GlobalLoading } from "@/components/global-loading"
 import Script from "next/script"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
@@ -79,6 +80,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geist.variable} ${playfair.variable} font-sans antialiased`}>
         <ThemeProvider>
+          <GlobalLoading />
           <CartProvider>
             <ShippingTicker />
             {children}
