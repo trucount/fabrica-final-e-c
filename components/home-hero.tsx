@@ -48,7 +48,7 @@ export function HomeHero({ content, style }: HomeHeroProps) {
   return (
     <section className="relative w-full bg-background overflow-hidden">
       {style === "image" ? (
-        <div className="relative w-full aspect-video">
+        <div className={`relative w-full ${isMobile ? "aspect-square" : "aspect-video"}`}>
           {/* Carousel Images */}
           {imageUrls.map((imageUrl, index) => (
             <div
