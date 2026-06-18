@@ -13,8 +13,8 @@ type HomeHeroProps = {
 }
 
 export function HomeHero({ content, style }: HomeHeroProps) {
-  const desktopImageUrls = content.heroImageUrlsDesktop.slice(0, 4)
-  const mobileImageUrls = content.heroImageUrlsMobile.slice(0, 4)
+  const desktopImageUrls = content.heroImageUrlsDesktop
+  const mobileImageUrls = content.heroImageUrlsMobile
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
 
