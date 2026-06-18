@@ -1,8 +1,11 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import type { HomeContent } from "@/lib/home-content"
 import type { SectionStyle } from "@/lib/client-commerce"
+import { useState, useEffect } from "react"
 
 type HomeHeroProps = {
   content: HomeContent
@@ -12,58 +15,87 @@ type HomeHeroProps = {
 export function HomeHero({ content, style }: HomeHeroProps) {
   const desktopImageUrls = content.heroImageUrlsDesktop.slice(0, 4)
   const mobileImageUrls = content.heroImageUrlsMobile.slice(0, 4)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
+
+  const imageUrls = isMobile ? mobileImageUrls : desktopImageUrls
+  const totalImages = imageUrls.length
+
+  useEffect(() => {
+    // Determine if mobile on mount and on resize
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  useEffect(() => {
+    if (style !== "image") return
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % totalImages)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [totalImages, style])
+
+  const goToImage = (index: number) => {
+    setCurrentImageIndex(index)
+  }
 
   return (
-    <section className="relative py-8 sm:py-12 md:py-16 flex items-center justify-center bg-black overflow-hidden">
-      <div className="w-full max-w-6xl px-4 sm:px-6">
-        {style === "image" ? (
-          <div className="flex justify-center">
-            {/* Mobile Carousel - 9:16 ratio */}
-            <div className="md:hidden w-full max-w-xs">
-              <div className="relative w-full aspect-[9/16] bg-black rounded-lg border border-gray-700 overflow-hidden">
-                {mobileImageUrls.map((imageUrl, index) => (
-                  <Image
-                    key={`mobile-${imageUrl}-${index}`}
-                    src={imageUrl}
-                    alt="Mobile hero carousel image"
-                    fill
-                    priority={index === 0}
-                    className="object-cover opacity-0 animate-hero-image-carousel"
-                    style={{ animationDelay: `${index * 5}s` }}
-                  />
-                ))}
-              </div>
+    <section className="relative w-full bg-background overflow-hidden">
+      {style === "image" ? (
+        <div className="relative w-full aspect-video">
+          {/* Carousel Images */}
+          {imageUrls.map((imageUrl, index) => (
+            <div
+              key={`image-${imageUrl}-${index}`}
+              className={`absolute inset-0 transition-opacity duration-500 ${
+                index === currentImageIndex ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <Image
+                src={imageUrl}
+                alt={`Hero carousel image ${index + 1}`}
+                fill
+                priority={index === 0}
+                className="object-cover"
+              />
             </div>
+          ))}
 
-            {/* Desktop Carousel - 9:16 ratio */}
-            <div className="hidden md:flex justify-center gap-4">
-              {desktopImageUrls.map((imageUrl, index) => (
-                <div key={`desktop-${imageUrl}-${index}`} className="flex-shrink-0">
-                  <div className="relative w-48 aspect-[9/16] bg-black rounded-lg border border-gray-700 overflow-hidden">
-                    <Image
-                      src={imageUrl}
-                      alt="Desktop hero carousel image"
-                      fill
-                      priority={index === 0}
-                      className="object-cover opacity-0 animate-hero-image-carousel"
-                      style={{ animationDelay: `${index * 5}s` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* Navigation Dots */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {imageUrls.map((_, index) => (
+              <button
+                key={`dot-${index}`}
+                onClick={() => goToImage(index)}
+                className={`w-3 h-3 rounded-full transition-all ${
+                  index === currentImageIndex
+                    ? "bg-white w-8"
+                    : "bg-white/50 hover:bg-white/75"
+                }`}
+                aria-label={`Go to image ${index + 1}`}
+              />
+            ))}
           </div>
-        ) : (
-          <iframe
-            className="absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2"
-            src={content.heroVideoUrl}
-            title="Background video"
-            allow="autoplay; encrypted-media"
-            style={{ pointerEvents: "none" }}
-          />
-        )}
+        </div>
+      ) : (
+        <div className="relative h-[60vh] sm:h-[70vh] flex items-center justify-center bg-black overflow-hidden">
+          <div className="absolute inset-0 w-full h-full">
+            <iframe
+              className="absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2"
+              src={content.heroVideoUrl}
+              title="Background video"
+              allow="autoplay; encrypted-media"
+              style={{ pointerEvents: "none" }}
+            />
+            <div className="absolute inset-0 bg-black/40" />
+          </div>
 
-        {style === "video" ? (
           <div className="relative z-10 text-center px-4 text-primary-foreground">
             <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-4 sm:mb-6 tracking-tight text-balance drop-shadow-md text-primary-foreground">
               {content.heroTitle}
@@ -75,8 +107,8 @@ export function HomeHero({ content, style }: HomeHeroProps) {
               <Link href="/collections">Explore Collection</Link>
             </Button>
           </div>
-        ) : null}
-      </div>
+        </div>
+      )}
     </section>
   )
 }
