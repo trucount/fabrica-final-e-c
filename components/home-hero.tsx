@@ -48,7 +48,8 @@ export function HomeHero({ content, style }: HomeHeroProps) {
   return (
     <section className="relative w-full bg-background overflow-hidden">
       {style === "image" ? (
-        <div className={`relative w-full ${isMobile ? "aspect-square" : "aspect-video"}`}>
+        <div className={`relative w-full ${isMobile ? "aspect-square" : "aspect-video"} ${!isMobile ? "px-4 md:px-6 lg:px-8" : ""}`}>
+          <div className={`relative w-full h-full ${!isMobile ? "rounded-lg overflow-hidden" : ""}`}>
           {/* Carousel Images */}
           {imageUrls.map((imageUrl, index) => (
             <div
@@ -67,20 +68,21 @@ export function HomeHero({ content, style }: HomeHeroProps) {
             </div>
           ))}
 
-          {/* Navigation Dots */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-            {imageUrls.map((_, index) => (
-              <button
-                key={`dot-${index}`}
-                onClick={() => goToImage(index)}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  index === currentImageIndex
-                    ? "bg-white w-8"
-                    : "bg-white/50 hover:bg-white/75"
-                }`}
-                aria-label={`Go to image ${index + 1}`}
-              />
-            ))}
+            {/* Navigation Dots */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+              {imageUrls.map((_, index) => (
+                <button
+                  key={`dot-${index}`}
+                  onClick={() => goToImage(index)}
+                  className={`w-3 h-3 rounded-full transition-all ${
+                    index === currentImageIndex
+                      ? "bg-white w-8"
+                      : "bg-white/50 hover:bg-white/75"
+                  }`}
+                  aria-label={`Go to image ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       ) : (
