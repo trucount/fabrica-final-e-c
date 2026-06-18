@@ -48,25 +48,25 @@ export function HomeHero({ content, style }: HomeHeroProps) {
   return (
     <section className="relative w-full bg-background overflow-hidden">
       {style === "image" ? (
-        <div className={`relative w-full ${!isMobile ? "px-4 md:px-6 lg:px-8" : ""}`} style={!isMobile ? { height: "calc(100vh - 64px - 30px)" } : { aspectRatio: "1" }}>
-          <div className={`relative w-full h-full ${!isMobile ? "rounded-lg overflow-hidden" : ""}`}>
-          {/* Carousel Images */}
-          {imageUrls.map((imageUrl, index) => (
-            <div
-              key={`image-${imageUrl}-${index}`}
-              className={`absolute inset-0 transition-opacity duration-500 ${
-                index === currentImageIndex ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              <Image
-                src={imageUrl}
-                alt={`Hero carousel image ${index + 1}`}
-                fill
-                priority={index === 0}
-                className="object-cover"
-              />
-            </div>
-          ))}
+        <div className={`relative w-full ${!isMobile ? "px-8 py-4 md:px-12 md:py-6 lg:px-16 lg:py-8" : ""}`} style={!isMobile ? { height: "calc(100vh - 64px)" } : { aspectRatio: "1" }}>
+          <div className={`relative w-full h-full ${!isMobile ? "rounded-lg overflow-hidden bg-black" : ""}`}>
+            {/* Carousel Images */}
+            {imageUrls.map((imageUrl, index) => (
+              <div
+                key={`image-${imageUrl}-${index}`}
+                className={`absolute inset-0 transition-opacity duration-500 ${
+                  index === currentImageIndex ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <Image
+                  src={imageUrl}
+                  alt={`Hero carousel image ${index + 1}`}
+                  fill
+                  priority={index === 0}
+                  className={isMobile ? "object-cover" : "object-contain"}
+                />
+              </div>
+            ))}
 
             {/* Navigation Dots */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
