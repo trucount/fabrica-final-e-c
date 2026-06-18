@@ -81,6 +81,11 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      </div>
+      <footer className="border-t border-border mt-12 sm:mt-16 pt-8 sm:pt-12">
+        <div className="container mx-auto px-4 sm:px-6 text-center text-xs sm:text-sm text-muted-foreground pb-8 sm:pb-12">
+          <p>Powered by Sparrow AI Solutions</p>
+        </div>
+      </footer>
+    </div>
   )
 }

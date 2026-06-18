@@ -40,7 +40,7 @@ export function ProfileSettings() {
     setIsPasswordSaving(true)
     try {
       await requestPasswordReset(current.email, `${window.location.origin}/login`)
-      toast({ title: "Reset email sent", description: "Check your inbox for the Supabase password reset link." })
+      toast({ title: "Reset email sent", description: "Check your inbox for the password reset link." })
     } catch (error) {
       toast({ title: "Reset email failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" })
     } finally {
@@ -62,7 +62,7 @@ export function ProfileSettings() {
       </form>
       <div className="mt-10 rounded-lg border p-4 sm:p-6">
         <h3 className="font-serif text-xl font-semibold">Reset Password</h3>
-        <p className="mt-1 text-sm text-muted-foreground">Send a secure Supabase password reset link to your account email.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Send a secure password reset link to your account email.</p>
         <Button type="button" onClick={updatePassword} disabled={isPasswordSaving} className="mt-4 h-12 px-8">{isPasswordSaving ? "Sending..." : "Send Reset Email"}</Button>
       </div>
     </div>

@@ -89,17 +89,8 @@ export default function OrderDetailsPage() {
           <div className={`bg-foreground p-5 sm:p-8 print:bg-white print:text-black ${isDefaultTheme ? "text-white" : "text-background"}`}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <div className="flex items-center gap-2">
-                  <Image
-                    src="/logo-black.png"
-                    alt="ASTERA Logo"
-                    width={32}
-                    height={32}
-                    className="h-8 w-auto object-contain brightness-0 invert print:brightness-0 print:invert-0"
-                  />
-                  <p className="font-serif text-3xl font-semibold">{brandName || "Store"}</p>
-                </div>
-                <p className="mt-2 text-sm opacity-80">Thank you for your order. Keep this receipt for your records.</p>
+                <p className="font-serif text-3xl font-semibold">{brandName || "Store"}</p>
+                <p className={`mt-2 text-sm opacity-80 ${isDefaultTheme ? "text-white" : ""}`}>Thank you for your order. Keep this receipt for your records.</p>
               </div>
               <div className={`rounded-xl bg-background/10 p-4 text-sm print:border print:bg-white ${isDefaultTheme ? "text-white" : ""}`}>
                 <p className="opacity-70">Order ID</p>
@@ -167,6 +158,11 @@ export default function OrderDetailsPage() {
         </section>
       </main>
 
+      <footer className="border-t border-border mt-12 sm:mt-16 pt-8 sm:pt-12 print:hidden">
+        <div className="container mx-auto px-4 sm:px-6 text-center text-xs sm:text-sm text-muted-foreground pb-8 sm:pb-12">
+          <p>Powered by Sparrow AI Solutions</p>
+        </div>
+      </footer>
     </div>
   )
 }
