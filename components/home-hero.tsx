@@ -48,7 +48,7 @@ export function HomeHero({ content, style }: HomeHeroProps) {
   return (
     <section className="relative w-full bg-background overflow-hidden">
       {style === "image" ? (
-        <div className={`relative w-full ${isMobile ? "aspect-square" : "aspect-video"} ${!isMobile ? "px-4 md:px-6 lg:px-8" : ""}`}>
+        <div className={`relative w-full ${!isMobile ? "px-4 md:px-6 lg:px-8" : ""}`} style={!isMobile ? { height: "calc(100vh - 64px - 30px)" } : { aspectRatio: "1" }}>
           <div className={`relative w-full h-full ${!isMobile ? "rounded-lg overflow-hidden" : ""}`}>
           {/* Carousel Images */}
           {imageUrls.map((imageUrl, index) => (
