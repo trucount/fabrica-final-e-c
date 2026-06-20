@@ -56,15 +56,15 @@ export const FEATURED_PRODUCT_LIMIT = 4
 
 function getSupabaseConfig() {
   const url = process.env.SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const anonKey = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!url || !serviceRoleKey) {
-    throw new Error("Supabase is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to Vercel.")
+  if (!url || !anonKey) {
+    throw new Error("Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to Vercel.")
   }
 
   return {
     url: url.replace(/\/$/, ""),
-    serviceRoleKey,
+    anonKey,
   }
 }
 
@@ -96,7 +96,7 @@ export async function getProducts(options: { section?: ProductSection; collectio
   }
 
   const response = await fetch(`${config.url}/rest/v1/products?${params.toString()}`, {
-    headers: getSupabaseHeaders(config.serviceRoleKey),
+    headers: getSupabaseHeaders(config.anonKey),
     cache: "no-store",
   })
 
@@ -113,7 +113,7 @@ export async function getProduct(id: string) {
   const response = await fetch(
     `${config.url}/rest/v1/products?id=eq.${encodeURIComponent(id)}&is_active=eq.true&select=*&limit=1`,
     {
-      headers: getSupabaseHeaders(config.serviceRoleKey),
+      headers: getSupabaseHeaders(config.anonKey),
       cache: "no-store",
     },
   )
@@ -132,7 +132,7 @@ export async function upsertProduct(product: ProductInput) {
   const response = await fetch(`${config.url}/rest/v1/products`, {
     method: "POST",
     headers: {
-      ...getSupabaseHeaders(config.serviceRoleKey),
+      ...getSupabaseHeaders(config.anonKey),
       "Content-Type": "application/json",
       Prefer: "resolution=merge-duplicates",
     },
@@ -163,7 +163,7 @@ export async function deleteProduct(id: string) {
   const config = getSupabaseConfig()
   const response = await fetch(`${config.url}/rest/v1/products?id=eq.${encodeURIComponent(id)}`, {
     method: "DELETE",
-    headers: getSupabaseHeaders(config.serviceRoleKey),
+    headers: getSupabaseHeaders(config.anonKey),
   })
 
   if (!response.ok) {
@@ -178,8 +178,8 @@ export async function uploadProductImage(file: File, productId: string, slot: st
   const response = await fetch(`${config.url}/storage/v1/object/pic/${objectPath}`, {
     method: "POST",
     headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
+      apikey: config.anonKey,
+      Authorization: `Bearer ${config.anonKey}`,
       "Content-Type": file.type || "application/octet-stream",
       "x-upsert": "true",
     },
@@ -215,10 +215,10 @@ function parseProductRow(row: ProductRow): ProductDetailData {
   }
 }
 
-function getSupabaseHeaders(serviceRoleKey: string) {
+function getSupabaseHeaders(anonKey: string) {
   return {
-    apikey: serviceRoleKey,
-    Authorization: `Bearer ${serviceRoleKey}`,
+    apikey: anonKey,
+    Authorization: `Bearer ${anonKey}`,
   }
 }
 

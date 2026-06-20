@@ -62,6 +62,12 @@ values ('pic', 'pic', true)
 on conflict (id) do update
 set public = excluded.public;
 
--- Keep table writes private. The Next.js server uses SUPABASE_SERVICE_ROLE_KEY,
--- so no public table RLS policy is required for admin CRUD.
+-- The app uses the Supabase anon key for REST access.
 alter table public.collections enable row level security;
+drop policy if exists "Collections are anon editable" on public.collections;
+create policy "Collections are anon editable"
+on public.collections
+for all
+to anon
+using (true)
+with check (true);

@@ -7,11 +7,10 @@ Add these variables in Vercel (or your local `.env.local`) for the SPARROW chatb
 
 ```env
 SUPABASE_URL=your-supabase-project-url
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` is used only on the server for editable content, orders, users, and Supabase invite emails. `SUPABASE_ANON_KEY` is used for customer auth flows.
+`SUPABASE_ANON_KEY` is used for Supabase REST and customer auth flows.
 
 ### Required for SPARROW chatbot
 

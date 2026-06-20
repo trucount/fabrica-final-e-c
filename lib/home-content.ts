@@ -15,15 +15,15 @@ const HOME_CONTENT_ID = "home"
 
 function getSupabaseConfig() {
   const url = process.env.SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const anonKey = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!url || !serviceRoleKey) {
-    throw new Error("Supabase is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to Vercel.")
+  if (!url || !anonKey) {
+    throw new Error("Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to Vercel.")
   }
 
   return {
     url: url.replace(/\/$/, ""),
-    serviceRoleKey,
+    anonKey,
   }
 }
 
@@ -31,8 +31,8 @@ export async function getHomeContent(): Promise<HomeContent> {
   const config = getSupabaseConfig()
   const response = await fetch(`${config.url}/rest/v1/site_content?id=eq.${HOME_CONTENT_ID}&select=content&limit=1`, {
     headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
+      apikey: config.anonKey,
+      Authorization: `Bearer ${config.anonKey}`,
     },
     cache: "no-store",
   })
@@ -55,8 +55,8 @@ export async function saveHomeContent(content: HomeContent) {
   const response = await fetch(`${config.url}/rest/v1/site_content`, {
     method: "POST",
     headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
+      apikey: config.anonKey,
+      Authorization: `Bearer ${config.anonKey}`,
       "Content-Type": "application/json",
       Prefer: "resolution=merge-duplicates",
     },

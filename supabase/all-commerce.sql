@@ -498,6 +498,23 @@ on public.collections
 for select
 using (true);
 
--- Commerce writes are performed by Next.js API routes with SUPABASE_SERVICE_ROLE_KEY
--- so admin policy changes, orders, order items, users, and addresses persist even
--- while row-level security protects those tables from direct anonymous writes.
+-- The app uses the Supabase anon key for REST access, so grant anon access to
+-- the tables that the Next.js server reads and writes.
+drop policy if exists "Site content is anon editable" on public.site_content;
+create policy "Site content is anon editable" on public.site_content for all to anon using (true) with check (true);
+drop policy if exists "Collections are anon editable" on public.collections;
+create policy "Collections are anon editable" on public.collections for all to anon using (true) with check (true);
+drop policy if exists "Products are anon editable" on public.products;
+create policy "Products are anon editable" on public.products for all to anon using (true) with check (true);
+drop policy if exists "Users are anon editable" on public.app_users;
+create policy "Users are anon editable" on public.app_users for all to anon using (true) with check (true);
+drop policy if exists "Addresses are anon editable" on public.saved_addresses;
+create policy "Addresses are anon editable" on public.saved_addresses for all to anon using (true) with check (true);
+drop policy if exists "Order policies are anon editable" on public.order_policies;
+create policy "Order policies are anon editable" on public.order_policies for all to anon using (true) with check (true);
+drop policy if exists "Coupons are anon editable" on public.coupons;
+create policy "Coupons are anon editable" on public.coupons for all to anon using (true) with check (true);
+drop policy if exists "Orders are anon editable" on public.orders;
+create policy "Orders are anon editable" on public.orders for all to anon using (true) with check (true);
+drop policy if exists "Order items are anon editable" on public.order_items;
+create policy "Order items are anon editable" on public.order_items for all to anon using (true) with check (true);

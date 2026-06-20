@@ -99,7 +99,13 @@ on public.products
 for select
 using (is_active = true);
 
--- Admin writes are performed by the service role key used by the Next.js server actions.
+drop policy if exists "Products are anon editable" on public.products;
+create policy "Products are anon editable"
+on public.products
+for all
+to anon
+using (true)
+with check (true);
 
 -- Mock products using the same style of image URLs as collection cards.
 -- Main image is a single URL. Gallery images are multiple URLs displayed on product detail pages.
