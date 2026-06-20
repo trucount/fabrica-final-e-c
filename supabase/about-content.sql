@@ -40,6 +40,12 @@ values (
 )
 on conflict (id) do nothing;
 
--- Keep reads/writes private. The Next.js server uses SUPABASE_SERVICE_ROLE_KEY,
--- so no public RLS policy is required for this table.
+-- The app uses the Supabase anon key for REST access.
 alter table public.site_content enable row level security;
+drop policy if exists "Site content is anon editable" on public.site_content;
+create policy "Site content is anon editable"
+on public.site_content
+for all
+to anon
+using (true)
+with check (true);

@@ -34,8 +34,12 @@ on conflict (name) do update set colors = excluded.colors, label = excluded.labe
 alter table public.themes enable row level security;
 drop policy if exists "Themes are publicly readable" on public.themes;
 create policy "Themes are publicly readable" on public.themes for select using (is_active = true);
+drop policy if exists "Themes are anon editable" on public.themes;
+create policy "Themes are anon editable" on public.themes for all to anon using (true) with check (true);
 
 -- 5. Ensure order_policies has public read access
 alter table public.order_policies enable row level security;
 drop policy if exists "Order policies are publicly readable" on public.order_policies;
 create policy "Order policies are publicly readable" on public.order_policies for select using (true);
+drop policy if exists "Order policies are anon editable" on public.order_policies;
+create policy "Order policies are anon editable" on public.order_policies for all to anon using (true) with check (true);

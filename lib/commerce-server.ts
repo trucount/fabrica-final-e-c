@@ -24,14 +24,13 @@ function firstString(...values: unknown[]) {
 
 function getSupabaseConfig() {
   const url = process.env.SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const anonKey = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!url || !serviceRoleKey) {
-    throw new Error("Supabase is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to Vercel.")
+  if (!url || !anonKey) {
+    throw new Error("Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to Vercel.")
   }
 
-  return { url: url.replace(/\/$/, ""), serviceRoleKey, anonKey }
+  return { url: url.replace(/\/$/, ""), anonKey }
 }
 
 function headers(token: string, extra: HeadersInit = {}) {
@@ -381,7 +380,7 @@ async function rest(path: string, init: RequestInit = {}) {
   const config = getSupabaseConfig()
   const response = await fetch(`${config.url}/rest/v1/${path}`, {
     ...init,
-    headers: headers(config.serviceRoleKey, init.headers),
+    headers: headers(config.anonKey, init.headers),
     cache: "no-store",
   })
 
@@ -644,7 +643,7 @@ export async function inviteCommerceUser(input: { email: string; firstName?: str
 
   const response = await fetch(`${config.url}/auth/v1/invite${input.redirectTo ? `?redirect_to=${encodeURIComponent(input.redirectTo)}` : ""}`, {
     method: "POST",
-    headers: headers(config.serviceRoleKey, { "Content-Type": "application/json" }),
+    headers: headers(config.anonKey, { "Content-Type": "application/json" }),
     body: JSON.stringify({
       email,
       data: {

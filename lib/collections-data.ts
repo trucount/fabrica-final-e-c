@@ -27,22 +27,22 @@ export type CollectionInput = {
 
 function getSupabaseConfig() {
   const url = process.env.SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const anonKey = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!url || !serviceRoleKey) {
-    throw new Error("Supabase is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to Vercel.")
+  if (!url || !anonKey) {
+    throw new Error("Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to Vercel.")
   }
 
   return {
     url: url.replace(/\/$/, ""),
-    serviceRoleKey,
+    anonKey,
   }
 }
 
 export async function getCollections(): Promise<CollectionItem[]> {
   const config = getSupabaseConfig()
   const response = await fetch(`${config.url}/rest/v1/collections?select=*&order=sort_order.asc,name.asc`, {
-    headers: getSupabaseHeaders(config.serviceRoleKey),
+    headers: getSupabaseHeaders(config.anonKey),
     cache: "no-store",
   })
 
@@ -59,7 +59,7 @@ export async function upsertCollection(collection: CollectionInput) {
   const response = await fetch(`${config.url}/rest/v1/collections`, {
     method: "POST",
     headers: {
-      ...getSupabaseHeaders(config.serviceRoleKey),
+      ...getSupabaseHeaders(config.anonKey),
       "Content-Type": "application/json",
       Prefer: "resolution=merge-duplicates",
     },
@@ -83,7 +83,7 @@ export async function deleteCollection(id: string) {
   const config = getSupabaseConfig()
   const response = await fetch(`${config.url}/rest/v1/collections?id=eq.${encodeURIComponent(id)}`, {
     method: "DELETE",
-    headers: getSupabaseHeaders(config.serviceRoleKey),
+    headers: getSupabaseHeaders(config.anonKey),
   })
 
   if (!response.ok) {
@@ -98,8 +98,8 @@ export async function uploadCollectionImage(file: File, collectionId: string) {
   const response = await fetch(`${config.url}/storage/v1/object/pic/${objectPath}`, {
     method: "POST",
     headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
+      apikey: config.anonKey,
+      Authorization: `Bearer ${config.anonKey}`,
       "Content-Type": file.type || "application/octet-stream",
       "x-upsert": "true",
     },
@@ -124,10 +124,10 @@ function parseCollectionRow(row: CollectionRow): CollectionItem {
   }
 }
 
-function getSupabaseHeaders(serviceRoleKey: string) {
+function getSupabaseHeaders(anonKey: string) {
   return {
-    apikey: serviceRoleKey,
-    Authorization: `Bearer ${serviceRoleKey}`,
+    apikey: anonKey,
+    Authorization: `Bearer ${anonKey}`,
   }
 }
 

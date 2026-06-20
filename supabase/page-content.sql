@@ -126,3 +126,10 @@ set
   updated_at = excluded.updated_at;
 
 alter table public.site_content enable row level security;
+drop policy if exists "Site content is anon editable" on public.site_content;
+create policy "Site content is anon editable"
+on public.site_content
+for all
+to anon
+using (true)
+with check (true);
