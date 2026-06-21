@@ -8,7 +8,7 @@ import { saveAboutContent, type AboutContent } from "@/lib/about-content"
 import { EDIT_SESSION_COOKIE } from "../constants"
 import { requireEditPageAccess } from "../auth"
 
-const EDIT_PASSWORD = "sparrowaisolutions"
+const EDIT_PASSWORD = process.env.PASS || "sparrowaisolutions"
 
 export async function loginToEdit(formData: FormData) {
   const password = String(formData.get("password") ?? "")

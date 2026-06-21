@@ -21,7 +21,7 @@ import {
 import { ADMIN_SESSION_COOKIE } from "./constants"
 import { requireAdminPageAccess } from "./auth"
 
-const ADMIN_PASSWORD = "sparrowaisolutions"
+const ADMIN_PASSWORD = process.env.PASS || "sparrowaisolutions"
 
 export async function loginToAdmin(formData: FormData) {
   const password = String(formData.get("password") ?? "")
